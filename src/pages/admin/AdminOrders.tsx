@@ -25,13 +25,22 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, ShoppingCart, Eye } from 'lucide-react';
+import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import OrderReviewDialog from '@/components/admin/OrderReviewDialog';
+import {
+  ORDER_STATUSES,
+  getValidNextStatuses,
+  isTerminalStatus,
+  getStatusLabel,
+  getStatusColor,
+} from '@/lib/orderStatusFlow';
 
 interface Order {
   id: string;
   user_id: string;
   total_amount: number;
+  adjusted_amount: number | null;
   status: string;
   delivery_address: string | null;
   created_at: string;
@@ -43,15 +52,8 @@ interface OrderItem {
   product_name: string;
   product_price: number;
   quantity: number;
+  item_status: string;
 }
-
-const orderStatuses = [
-  { value: 'pending', label: 'Pending', color: 'bg-amber-100 text-amber-800' },
-  { value: 'packed', label: 'Packed', color: 'bg-blue-100 text-blue-800' },
-  { value: 'out_for_delivery', label: 'Out for Delivery', color: 'bg-purple-100 text-purple-800' },
-  { value: 'delivered', label: 'Delivered', color: 'bg-green-100 text-green-800' },
-  { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' },
-];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -61,6 +63,7 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [loadingItems, setLoadingItems] = useState(false);
   const { toast } = useToast();
 
@@ -76,7 +79,7 @@ export default function AdminOrders() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data || []) as Order[]);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -98,7 +101,7 @@ export default function AdminOrders() {
         .eq('order_id', orderId);
 
       if (error) throw error;
-      setOrderItems(data || []);
+      setOrderItems((data || []) as OrderItem[]);
     } catch (error) {
       console.error('Error fetching order items:', error);
     } finally {
@@ -112,7 +115,27 @@ export default function AdminOrders() {
     await fetchOrderItems(order.id);
   };
 
+  const handleReviewOrder = async (order: Order) => {
+    setSelectedOrder(order);
+    await fetchOrderItems(order.id);
+    setIsReviewOpen(true);
+  };
+
   const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    // Validate transition on client side too
+    const validStatuses = getValidNextStatuses(order.status);
+    if (!validStatuses.includes(newStatus)) {
+      toast({
+        title: 'Invalid status change',
+        description: `Cannot change from ${getStatusLabel(order.status)} to ${getStatusLabel(newStatus)}`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('orders')
@@ -120,17 +143,27 @@ export default function AdminOrders() {
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Create notification for status change
+      await supabase.from('notifications').insert({
+        user_id: order.user_id,
+        order_id: orderId,
+        type: `order_${newStatus}`,
+        title: `Order ${getStatusLabel(newStatus)}`,
+        message: `Your order #${orderId.slice(0, 8).toUpperCase()} is now ${getStatusLabel(newStatus).toLowerCase()}.`,
+      });
+
       toast({ title: 'Order status updated' });
       fetchOrders();
 
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating status:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update order status',
+        description: error.message || 'Failed to update order status',
         variant: 'destructive',
       });
     }
@@ -155,10 +188,10 @@ export default function AdminOrders() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = orderStatuses.find((s) => s.value === status);
+    const colorClass = getStatusColor(status);
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig?.color || 'bg-muted text-muted-foreground'}`}>
-        {statusConfig?.label || status}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+        {getStatusLabel(status)}
       </span>
     );
   };
@@ -168,6 +201,53 @@ export default function AdminOrders() {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const renderStatusSelect = (order: Order) => {
+    const isTerminal = isTerminalStatus(order.status);
+    const validNextStatuses = getValidNextStatuses(order.status);
+    
+    if (isTerminal) {
+      return getStatusBadge(order.status);
+    }
+
+    // For pending orders, show review button instead of status select
+    if (order.status === 'pending') {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={() => handleReviewOrder(order)}
+        >
+          <ClipboardCheck className="h-3 w-3 mr-1" />
+          Review
+        </Button>
+      );
+    }
+
+    return (
+      <Select
+        value={order.status}
+        onValueChange={(value) => handleStatusChange(order.id, value)}
+      >
+        <SelectTrigger className="w-[140px] h-8 text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {/* Current status */}
+          <SelectItem value={order.status} disabled>
+            {getStatusLabel(order.status)} (Current)
+          </SelectItem>
+          {/* Valid next statuses */}
+          {validNextStatuses.map((status) => (
+            <SelectItem key={status} value={status}>
+              {getStatusLabel(status)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -193,7 +273,7 @@ export default function AdminOrders() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Orders</SelectItem>
-                {orderStatuses.map((status) => (
+                {ORDER_STATUSES.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
                   </SelectItem>
@@ -234,26 +314,19 @@ export default function AdminOrders() {
                     </TableCell>
                     <TableCell>{formatDate(order.created_at)}</TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(order.total_amount)}
+                      <div className="flex flex-col">
+                        <span>{formatCurrency(order.adjusted_amount ?? order.total_amount)}</span>
+                        {order.adjusted_amount && order.adjusted_amount !== order.total_amount && (
+                          <span className="text-xs text-muted-foreground line-through">
+                            {formatCurrency(order.total_amount)}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(order.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Select
-                          value={order.status}
-                          onValueChange={(value) => handleStatusChange(order.id, value)}
-                        >
-                          <SelectTrigger className="w-[140px] h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {orderStatuses.map((status) => (
-                              <SelectItem key={status.value} value={status.value}>
-                                {status.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {renderStatusSelect(order)}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -271,6 +344,7 @@ export default function AdminOrders() {
         </CardContent>
       </Card>
 
+      {/* Order Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -293,7 +367,14 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Total</p>
-                  <p className="font-medium">{formatCurrency(selectedOrder.total_amount)}</p>
+                  <p className="font-medium">
+                    {formatCurrency(selectedOrder.adjusted_amount ?? selectedOrder.total_amount)}
+                    {selectedOrder.adjusted_amount && selectedOrder.adjusted_amount !== selectedOrder.total_amount && (
+                      <span className="text-xs text-muted-foreground line-through ml-2">
+                        {formatCurrency(selectedOrder.total_amount)}
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -317,15 +398,26 @@ export default function AdminOrders() {
                     {orderItems.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between py-2 border-b last:border-0"
+                        className={`flex items-center justify-between py-2 border-b last:border-0 ${
+                          item.item_status === 'out_of_stock' ? 'opacity-50' : ''
+                        }`}
                       >
-                        <div>
-                          <p className="font-medium">{item.product_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Qty: {item.quantity}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <p className={`font-medium ${item.item_status === 'out_of_stock' ? 'line-through' : ''}`}>
+                              {item.product_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Qty: {item.quantity}
+                            </p>
+                          </div>
+                          {item.item_status === 'out_of_stock' && (
+                            <Badge variant="destructive" className="text-xs">
+                              Out of Stock
+                            </Badge>
+                          )}
                         </div>
-                        <p className="font-medium">
+                        <p className={`font-medium ${item.item_status === 'out_of_stock' ? 'line-through' : ''}`}>
                           {formatCurrency(item.product_price * item.quantity)}
                         </p>
                       </div>
@@ -337,6 +429,17 @@ export default function AdminOrders() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Order Review Dialog for pending orders */}
+      {selectedOrder && (
+        <OrderReviewDialog
+          order={selectedOrder}
+          items={orderItems}
+          open={isReviewOpen}
+          onOpenChange={setIsReviewOpen}
+          onOrderUpdated={fetchOrders}
+        />
+      )}
     </div>
   );
 }
