@@ -1,4 +1,4 @@
-import { Check, Clock, Package, Truck, Home } from 'lucide-react';
+import { Check, Clock, ChefHat, Bike, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface OrderTimelineProps {
@@ -8,8 +8,8 @@ interface OrderTimelineProps {
 
 const statusSteps = [
   { key: 'pending', label: 'Order Placed', icon: Clock },
-  { key: 'processing', label: 'Processing', icon: Package },
-  { key: 'shipped', label: 'Shipped', icon: Truck },
+  { key: 'processing', label: 'Preparing', icon: ChefHat },
+  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Bike },
   { key: 'delivered', label: 'Delivered', icon: Home },
 ];
 
