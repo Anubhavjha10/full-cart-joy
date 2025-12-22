@@ -4,6 +4,7 @@ import HeroBanner from '@/components/HeroBanner';
 import PromoCategoryCard from '@/components/PromoCategoryCard';
 import CategoryIcon from '@/components/CategoryIcon';
 import ProductSection from '@/components/ProductSection';
+import FeaturedCarousel from '@/components/FeaturedCarousel';
 import Footer from '@/components/Footer';
 import {
   categories,
@@ -16,6 +17,17 @@ import {
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Featured products - pick a mix for the carousel
+  const featuredProducts = useMemo(() => {
+    const featured = [
+      ...dairyProducts.slice(0, 2),
+      ...snackProducts.slice(0, 2),
+      ...beverageProducts.slice(0, 2),
+      ...breakfastProducts.slice(0, 2),
+    ];
+    return featured;
+  }, []);
 
   // Filter products based on search query
   const filterProducts = (products: typeof dairyProducts) => {
@@ -82,6 +94,15 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Featured Products Carousel */}
+        {!searchQuery && (
+          <FeaturedCarousel 
+            title="Featured Products" 
+            products={featuredProducts} 
+            icon="sparkles" 
+          />
+        )}
+
         {/* Product Sections */}
         {!hasResults && searchQuery && (
           <div className="text-center py-12">
@@ -98,23 +119,43 @@ const Index = () => {
         )}
 
         {filteredDairy.length > 0 && (
-          <ProductSection title="Dairy, Bread & Eggs" products={filteredDairy} />
+          <ProductSection 
+            title="Dairy, Bread & Eggs" 
+            products={filteredDairy} 
+            categorySlug="dairy-&-eggs"
+          />
         )}
 
         {filteredVegetables.length > 0 && (
-          <ProductSection title="Fruits & Vegetables" products={filteredVegetables} />
+          <ProductSection 
+            title="Fruits & Vegetables" 
+            products={filteredVegetables} 
+            categorySlug="vegetables"
+          />
         )}
 
         {filteredSnacks.length > 0 && (
-          <ProductSection title="Snacks & Munchies" products={filteredSnacks} />
+          <ProductSection 
+            title="Snacks & Munchies" 
+            products={filteredSnacks} 
+            categorySlug="snacks"
+          />
         )}
 
         {filteredBreakfast.length > 0 && (
-          <ProductSection title="Breakfast & Instant Food" products={filteredBreakfast} />
+          <ProductSection 
+            title="Breakfast & Instant Food" 
+            products={filteredBreakfast} 
+            categorySlug="bakery"
+          />
         )}
 
         {filteredBeverages.length > 0 && (
-          <ProductSection title="Cold Drinks & Juices" products={filteredBeverages} />
+          <ProductSection 
+            title="Cold Drinks & Juices" 
+            products={filteredBeverages} 
+            categorySlug="beverages"
+          />
         )}
       </main>
 
