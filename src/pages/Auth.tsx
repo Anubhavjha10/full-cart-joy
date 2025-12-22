@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,18 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
 const phoneSchema = z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number');
 
+const checkUserRole = async (userId: string): Promise<boolean> => {
+  const { data, error } = await supabase.rpc('has_role', { 
+    _user_id: userId, 
+    _role: 'admin' 
+  });
+  if (error) {
+    console.error('Error checking role:', error);
+    return false;
+  }
+  return data === true;
+};
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -26,9 +38,20 @@ const Auth = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; phone?: string }>({});
   
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const handleRedirect = async () => {
+      if (user) {
+        const isAdmin = await checkUserRole(user.id);
+        navigate(isAdmin ? '/admin' : '/', { replace: true });
+      }
+    };
+    handleRedirect();
+  }, [user, navigate]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; name?: string; phone?: string } = {};
@@ -78,11 +101,16 @@ const Auth = () => {
             variant: 'destructive',
           });
         } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'You have successfully logged in.',
-          });
-          navigate('/');
+          // Check user role and redirect accordingly
+          const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+          if (loggedInUser) {
+            const isAdmin = await checkUserRole(loggedInUser.id);
+            toast({
+              title: 'Welcome back!',
+              description: isAdmin ? 'Redirecting to admin panel...' : 'You have successfully logged in.',
+            });
+            navigate(isAdmin ? '/admin' : '/', { replace: true });
+          }
         }
       } else {
         const { error, data } = await signUp(email, password, fullName);
@@ -126,7 +154,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) {

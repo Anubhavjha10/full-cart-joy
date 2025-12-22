@@ -24,7 +24,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   if (!isAdmin) {
