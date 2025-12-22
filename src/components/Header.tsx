@@ -80,6 +80,12 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/wishlist" className="flex items-center gap-2 cursor-pointer">
                       <Heart className="h-4 w-4" />
                       My Wishlist
