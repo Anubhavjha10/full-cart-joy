@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Clock } from 'lucide-react';
+import { Clock, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart, Product } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -10,7 +12,9 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart, items, updateQuantity } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const cartItem = items.find((item) => item.id === product.id);
+  const inWishlist = isInWishlist(product.id);
 
   const handleAddClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -22,6 +26,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     updateQuantity(product.id, newCount);
+  };
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
   };
 
   return (
@@ -39,6 +53,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <Clock className="h-3 w-3" />
             {product.deliveryTime}
           </div>
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlistToggle}
+            className="absolute top-3 right-3 p-1.5 rounded-full bg-card/95 backdrop-blur-sm shadow-sm hover:bg-card transition-colors"
+          >
+            <Heart
+              className={cn(
+                'h-4 w-4 transition-colors',
+                inWishlist ? 'fill-destructive text-destructive' : 'text-muted-foreground hover:text-destructive'
+              )}
+            />
+          </button>
         </div>
 
         {/* Content */}
