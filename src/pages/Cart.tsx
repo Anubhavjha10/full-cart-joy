@@ -1,15 +1,40 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useState } from 'react';
 
 const Cart = () => {
-  const { items, updateQuantity, removeFromCart, clearCart, totalPrice } = useCart();
+  const { items, updateQuantity, removeFromCart, clearCart, totalPrice, placeOrder } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (!deliveryAddress.trim()) {
+      return;
+    }
+
+    setIsPlacingOrder(true);
+    const success = await placeOrder(deliveryAddress);
+    setIsPlacingOrder(false);
+
+    if (success) {
+      navigate('/orders');
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -135,14 +160,39 @@ const Cart = () => {
                 </div>
               </div>
 
-              <div className="flex justify-between font-bold text-lg mb-6">
+              <div className="flex justify-between font-bold text-lg mb-4">
                 <span className="text-foreground">Total</span>
                 <span className="text-foreground">₹{totalPrice}</span>
               </div>
 
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6">
-                Proceed to Checkout
-              </Button>
+              {user ? (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="address" className="text-sm font-medium text-foreground mb-2 block">
+                      Delivery Address
+                    </label>
+                    <Input
+                      id="address"
+                      placeholder="Enter your delivery address"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={handlePlaceOrder}
+                    disabled={isPlacingOrder || !deliveryAddress.trim()}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6"
+                  >
+                    {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/auth">
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6">
+                    Login to Checkout
+                  </Button>
+                </Link>
+              )}
 
               <p className="text-xs text-muted-foreground text-center mt-4">
                 Delivery within 13 minutes

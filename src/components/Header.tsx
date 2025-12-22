@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Search, User, ShoppingCart } from 'lucide-react';
+import { Search, User, ShoppingCart, LogOut, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   searchQuery: string;
@@ -11,6 +19,7 @@ interface HeaderProps {
 
 const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
@@ -40,10 +49,41 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="gap-2 hidden sm:flex">
-              <User className="h-4 w-4" />
-              Login
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline max-w-[100px] truncate">
+                      {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders" className="flex items-center gap-2 cursor-pointer">
+                      <Package className="h-4 w-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="flex items-center gap-2 text-destructive cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" className="gap-2 hidden sm:flex">
+                  <User className="h-4 w-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
             <Link to="/cart">
               <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
                 <ShoppingCart className="h-4 w-4" />
