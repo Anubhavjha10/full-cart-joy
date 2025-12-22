@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -17,6 +17,11 @@ import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
+// Wrapper to force remount on product ID change for proper history handling
+const ProductDetailWrapper = () => {
+  const { id } = useParams<{ id: string }>();
+  return <ProductDetail key={id} />;
+};
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -34,7 +39,7 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/product/:id" element={<ProductDetailWrapper />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/category/:categoryId" element={<Category />} />
                 <Route path="/wishlist" element={<Wishlist />} />
