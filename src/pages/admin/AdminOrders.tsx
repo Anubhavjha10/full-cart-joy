@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck, Bell, BellOff, Volume2, VolumeX } from 'lucide-react';
+import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import OrderReviewDialog from '@/components/admin/OrderReviewDialog';
 import {
@@ -36,11 +36,9 @@ import {
   getStatusColor,
 } from '@/lib/orderStatusFlow';
 import { useAdminRealtimeOrders, Order, OrderItem } from '@/hooks/useAdminRealtimeOrders';
-import { useNewOrderAlerts } from '@/hooks/useNewOrderAlerts';
 
 export default function AdminOrders() {
   const { orders, loading, refetch } = useAdminRealtimeOrders();
-  const { requestPermission, isMuted, toggleMute } = useNewOrderAlerts();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -216,21 +214,6 @@ export default function AdminOrders() {
             <span className="h-2 w-2 rounded-full bg-primary" />
             Live
           </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant={isMuted ? "outline" : "default"} 
-            size="sm" 
-            onClick={toggleMute} 
-            className="gap-2"
-          >
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            {isMuted ? 'Unmute' : 'Mute'}
-          </Button>
-          <Button variant="outline" size="sm" onClick={requestPermission} className="gap-2">
-            <Bell className="h-4 w-4" />
-            Enable Alerts
-          </Button>
         </div>
       </div>
 

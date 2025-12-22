@@ -8,10 +8,13 @@ import {
   LogOut,
   FolderTree
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAdminNotifications } from '@/contexts/AdminNotificationContext';
+import { useEffect } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -29,7 +32,7 @@ const menuItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Products', url: '/admin/products', icon: Package },
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
-  { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
+  { title: 'Orders', url: '/admin/orders', icon: ShoppingCart, showBadge: true },
   { title: 'Users', url: '/admin/users', icon: Users },
   { title: 'Banners', url: '/admin/banners', icon: Image },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
@@ -38,6 +41,15 @@ const menuItems = [
 export function AdminSidebar() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { unseenOrderCount, markOrdersSeen } = useAdminNotifications();
+
+  // Mark orders as seen when visiting the orders page
+  useEffect(() => {
+    if (location.pathname === '/admin/orders') {
+      markOrdersSeen();
+    }
+  }, [location.pathname, markOrdersSeen]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -79,7 +91,15 @@ export function AdminSidebar() {
                       }
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="flex-1">{item.title}</span>
+                      {item.showBadge && unseenOrderCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="h-5 min-w-[20px] px-1.5 text-xs font-bold animate-pulse"
+                        >
+                          {unseenOrderCount > 99 ? '99+' : unseenOrderCount}
+                        </Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

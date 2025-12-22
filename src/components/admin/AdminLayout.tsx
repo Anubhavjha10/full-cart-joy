@@ -3,10 +3,71 @@ import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { AdminSidebar } from './AdminSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bell, BellOff, Volume2, VolumeX } from 'lucide-react';
+import { AdminNotificationProvider, useAdminNotifications } from '@/contexts/AdminNotificationContext';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface AdminLayoutProps {
   children: ReactNode;
+}
+
+function AdminHeader({ email }: { email: string }) {
+  const { isMuted, toggleMute, requestPermission, hasPermission } = useAdminNotifications();
+
+  return (
+    <header className="h-14 border-b border-border flex items-center px-4 gap-4 bg-card">
+      <SidebarTrigger />
+      <div className="flex-1" />
+      
+      <TooltipProvider>
+        <div className="flex items-center gap-2">
+          {/* Mute toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMute}
+                className={isMuted ? 'text-muted-foreground' : 'text-foreground'}
+              >
+                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isMuted ? 'Unmute notifications' : 'Mute notifications'}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Browser notification toggle */}
+          {!hasPermission && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={requestPermission}
+                  className="text-muted-foreground"
+                >
+                  <Bell className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Enable browser notifications</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </TooltipProvider>
+
+      <span className="text-sm text-muted-foreground">
+        Welcome, {email}
+      </span>
+    </header>
+  );
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -40,22 +101,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AdminSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-border flex items-center px-4 gap-4 bg-card">
-            <SidebarTrigger />
-            <div className="flex-1" />
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user.email}
-            </span>
-          </header>
-          <main className="flex-1 p-6 overflow-auto">
-            {children}
-          </main>
+    <AdminNotificationProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AdminSidebar />
+          <div className="flex-1 flex flex-col">
+            <AdminHeader email={user.email || ''} />
+            <main className="flex-1 p-6 overflow-auto">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </AdminNotificationProvider>
   );
 }
