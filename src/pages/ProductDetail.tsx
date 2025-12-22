@@ -180,37 +180,6 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Nutritional Information */}
-        <Card className="p-6 mb-12 animate-fade-in">
-          <h2 className="text-xl font-bold text-foreground mb-6">Nutritional Information</h2>
-          <p className="text-sm text-muted-foreground mb-4">Per serving (approx.)</p>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
-            <div className="bg-accent/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{product.nutritionalInfo.calories}</div>
-              <div className="text-sm text-muted-foreground">Calories</div>
-            </div>
-            <div className="bg-accent/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-cyan">{product.nutritionalInfo.protein}</div>
-              <div className="text-sm text-muted-foreground">Protein</div>
-            </div>
-            <div className="bg-accent/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-amber">{product.nutritionalInfo.carbs}</div>
-              <div className="text-sm text-muted-foreground">Carbs</div>
-            </div>
-            <div className="bg-accent/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-violet">{product.nutritionalInfo.fat}</div>
-              <div className="text-sm text-muted-foreground">Fat</div>
-            </div>
-            {product.nutritionalInfo.fiber && (
-              <div className="bg-accent/50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-primary">{product.nutritionalInfo.fiber}</div>
-                <div className="text-sm text-muted-foreground">Fiber</div>
-              </div>
-            )}
-          </div>
-        </Card>
-
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section className="animate-fade-in">
