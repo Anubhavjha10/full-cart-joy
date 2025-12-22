@@ -33,7 +33,7 @@ export const dairyProducts: ProductWithDetails[] = [
     price: 35,
     image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=400&fit=crop',
     category: 'dairy',
-    deliveryTime: '13 MINS',
+    rating: 4.5,
     description: 'Amul Gold Full Cream Milk is homogenised toned milk with rich and creamy taste. Perfect for making tea, coffee, desserts, and drinking directly. Sourced from healthy cows and processed hygienically.',
     nutritionalInfo: {
       calories: '65 kcal',
@@ -51,7 +51,7 @@ export const dairyProducts: ProductWithDetails[] = [
     price: 29,
     image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=400&fit=crop',
     category: 'dairy',
-    deliveryTime: '13 MINS',
+    rating: 4.3,
     description: 'Amul Toned Milk provides the goodness of milk with reduced fat content. Ideal for health-conscious individuals who want nutrition without extra calories.',
     nutritionalInfo: {
       calories: '50 kcal',
@@ -69,7 +69,7 @@ export const dairyProducts: ProductWithDetails[] = [
     price: 58,
     image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&h=400&fit=crop',
     category: 'dairy',
-    deliveryTime: '13 MINS',
+    rating: 4.8,
     description: 'Amul Butter is made from fresh cream and has a smooth, creamy texture. Perfect for spreading on bread, parathas, or for cooking delicious dishes.',
     nutritionalInfo: {
       calories: '72 kcal',
@@ -88,7 +88,7 @@ export const dairyProducts: ProductWithDetails[] = [
     price: 35,
     image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop',
     category: 'dairy',
-    deliveryTime: '13 MINS',
+    rating: 4.4,
     description: 'Fresh and creamy curd made from pasteurized toned milk. Rich in probiotics and calcium, perfect for daily consumption and making raita, lassi, or buttermilk.',
     nutritionalInfo: {
       calories: '60 kcal',
@@ -106,7 +106,7 @@ export const dairyProducts: ProductWithDetails[] = [
     price: 120,
     image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&h=400&fit=crop',
     category: 'dairy',
-    deliveryTime: '13 MINS',
+    rating: 4.6,
     description: 'Processed cheese slices perfect for sandwiches, burgers, and quick snacks. Made from pure milk with a creamy, smooth texture that melts beautifully.',
     nutritionalInfo: {
       calories: '85 kcal',
@@ -125,7 +125,7 @@ export const dairyProducts: ProductWithDetails[] = [
     price: 48,
     image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&h=400&fit=crop',
     category: 'dairy',
-    deliveryTime: '13 MINS',
+    rating: 4.7,
     description: 'Fresh brown eggs from free-range hens. Rich in protein and essential nutrients. Perfect for breakfast, baking, or any meal.',
     nutritionalInfo: {
       calories: '70 kcal',
@@ -146,7 +146,7 @@ export const vegetableProducts: ProductWithDetails[] = [
     price: 25,
     image: 'https://images.unsplash.com/photo-1546470427-f5d9c1e3a0c7?w=400&h=400&fit=crop',
     category: 'vegetables',
-    deliveryTime: '13 MINS',
+    rating: 4.2,
     description: 'Farm-fresh red tomatoes, hand-picked for quality. Perfect for salads, curries, and sauces. Rich in lycopene and vitamin C.',
     nutritionalInfo: {
       calories: '18 kcal',
@@ -165,7 +165,7 @@ export const vegetableProducts: ProductWithDetails[] = [
     price: 35,
     image: 'https://images.unsplash.com/photo-1518977676601-b53f82ber5f?w=400&h=400&fit=crop',
     category: 'vegetables',
-    deliveryTime: '13 MINS',
+    rating: 4.3,
     description: 'Premium quality onions with strong flavor and long shelf life. Essential for Indian cooking, perfect for curries, salads, and pickles.',
     nutritionalInfo: {
       calories: '40 kcal',
@@ -184,7 +184,7 @@ export const vegetableProducts: ProductWithDetails[] = [
     price: 30,
     image: 'https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?w=400&h=400&fit=crop',
     category: 'vegetables',
-    deliveryTime: '13 MINS',
+    rating: 4.4,
     description: 'Fresh and firm potatoes, perfect for frying, boiling, or making delicious curries. A staple in every kitchen.',
     nutritionalInfo: {
       calories: '77 kcal',
@@ -203,7 +203,7 @@ export const vegetableProducts: ProductWithDetails[] = [
     price: 40,
     image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=400&fit=crop',
     category: 'vegetables',
-    deliveryTime: '13 MINS',
+    rating: 4.1,
     description: 'Crunchy and colorful bell peppers, packed with vitamin C. Great for salads, stir-fries, and stuffed recipes.',
     nutritionalInfo: {
       calories: '31 kcal',
@@ -222,7 +222,7 @@ export const vegetableProducts: ProductWithDetails[] = [
     price: 20,
     image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop',
     category: 'vegetables',
-    deliveryTime: '13 MINS',
+    rating: 4.5,
     description: 'Tender and nutritious spinach leaves, rich in iron and vitamins. Perfect for palak paneer, salads, and smoothies.',
     nutritionalInfo: {
       calories: '23 kcal',
@@ -241,7 +241,7 @@ export const vegetableProducts: ProductWithDetails[] = [
     price: 35,
     image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=400&fit=crop',
     category: 'vegetables',
-    deliveryTime: '13 MINS',
+    rating: 4.6,
     description: 'Crunchy orange carrots, naturally sweet and packed with beta-carotene. Great for salads, juices, and cooking.',
     nutritionalInfo: {
       calories: '41 kcal',
@@ -263,7 +263,7 @@ export const snackProducts: ProductWithDetails[] = [
     price: 20,
     image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&h=400&fit=crop',
     category: 'snacks',
-    deliveryTime: '13 MINS',
+    rating: 4.4,
     description: 'Crispy and delicious classic salted potato chips. Made from the finest potatoes, perfectly seasoned for that irresistible crunch.',
     nutritionalInfo: {
       calories: '150 kcal',
@@ -282,7 +282,7 @@ export const snackProducts: ProductWithDetails[] = [
     price: 40,
     image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&h=400&fit=crop',
     category: 'snacks',
-    deliveryTime: '13 MINS',
+    rating: 4.7,
     description: 'Traditional Indian savory snack made from besan (gram flour) with authentic spices. Perfect tea-time companion.',
     nutritionalInfo: {
       calories: '180 kcal',
@@ -301,7 +301,7 @@ export const snackProducts: ProductWithDetails[] = [
     price: 20,
     image: 'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=400&h=400&fit=crop',
     category: 'snacks',
-    deliveryTime: '13 MINS',
+    rating: 4.3,
     description: 'Crunchy puffed corn snacks with a tangy masala flavor. The signature twisted shape delivers an explosion of taste in every bite.',
     nutritionalInfo: {
       calories: '130 kcal',
@@ -320,7 +320,7 @@ export const snackProducts: ProductWithDetails[] = [
     price: 20,
     image: 'https://images.unsplash.com/photo-1600952841320-db92ec4047ca?w=400&h=400&fit=crop',
     category: 'snacks',
-    deliveryTime: '13 MINS',
+    rating: 4.2,
     description: 'Triangle-shaped corn snacks with bold achaari masti flavor. Crunchy texture with a tangy kick that keeps you coming back for more.',
     nutritionalInfo: {
       calories: '140 kcal',
@@ -339,7 +339,7 @@ export const snackProducts: ProductWithDetails[] = [
     price: 30,
     image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&h=400&fit=crop',
     category: 'snacks',
-    deliveryTime: '13 MINS',
+    rating: 4.5,
     description: 'Light and crispy salted crackers, perfect with tea or as a snack. The classic taste that has been loved for generations.',
     nutritionalInfo: {
       calories: '120 kcal',
@@ -358,7 +358,7 @@ export const snackProducts: ProductWithDetails[] = [
     price: 99,
     image: 'https://images.unsplash.com/photo-1568702846914-96b305d2uj?w=400&h=400&fit=crop',
     category: 'snacks',
-    deliveryTime: '13 MINS',
+    rating: 4.6,
     description: 'Iconic stackable potato crisps with a unique saddle shape. Perfectly seasoned original flavor in a convenient resealable can.',
     nutritionalInfo: {
       calories: '160 kcal',
@@ -380,7 +380,7 @@ export const breakfastProducts: ProductWithDetails[] = [
     price: 210,
     image: 'https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?w=400&h=400&fit=crop',
     category: 'breakfast',
-    deliveryTime: '13 MINS',
+    rating: 4.5,
     description: 'Start your day with the original and best corn flakes. Made from golden corn, lightly toasted to a perfect crunch. Fortified with vitamins and iron.',
     nutritionalInfo: {
       calories: '110 kcal',
@@ -400,7 +400,7 @@ export const breakfastProducts: ProductWithDetails[] = [
     price: 125,
     image: 'https://images.unsplash.com/photo-1461009683693-342af2f2d6ce?w=400&h=400&fit=crop',
     category: 'breakfast',
-    deliveryTime: '13 MINS',
+    rating: 4.4,
     description: 'Heart-healthy whole grain oats, rich in fiber and protein. Helps reduce cholesterol and keeps you full longer. Perfect for a nutritious breakfast.',
     nutritionalInfo: {
       calories: '120 kcal',
@@ -420,7 +420,7 @@ export const breakfastProducts: ProductWithDetails[] = [
     price: 180,
     image: 'https://images.unsplash.com/photo-1495214783159-3503fd1b572d?w=400&h=400&fit=crop',
     category: 'breakfast',
-    deliveryTime: '13 MINS',
+    rating: 4.6,
     description: 'Premium quality whole grain oats that cook in just 3 minutes. Rich in beta-glucan fiber for heart health. Versatile for porridge, smoothies, or baking.',
     nutritionalInfo: {
       calories: '117 kcal',
@@ -440,7 +440,7 @@ export const breakfastProducts: ProductWithDetails[] = [
     price: 275,
     image: 'https://images.unsplash.com/photo-1540914124281-342587941389?w=400&h=400&fit=crop',
     category: 'breakfast',
-    deliveryTime: '13 MINS',
+    rating: 4.3,
     description: 'A wholesome blend of rolled oats, dried fruits, nuts, and seeds. No added sugar, just natural goodness. Perfect with milk or yogurt.',
     nutritionalInfo: {
       calories: '140 kcal',
@@ -460,7 +460,7 @@ export const breakfastProducts: ProductWithDetails[] = [
     price: 40,
     image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=400&fit=crop',
     category: 'breakfast',
-    deliveryTime: '13 MINS',
+    rating: 4.2,
     description: 'Soft and fresh white bread, perfect for sandwiches and toast. Made with premium wheat flour for a fluffy texture.',
     nutritionalInfo: {
       calories: '75 kcal',
@@ -480,7 +480,7 @@ export const breakfastProducts: ProductWithDetails[] = [
     price: 399,
     image: 'https://images.unsplash.com/photo-1604514628550-37477afdf4e3?w=400&h=400&fit=crop',
     category: 'breakfast',
-    deliveryTime: '13 MINS',
+    rating: 4.8,
     description: 'Creamy hazelnut cocoa spread loved worldwide. Perfect on toast, pancakes, or straight from the jar. A breakfast favorite for all ages.',
     nutritionalInfo: {
       calories: '200 kcal',
@@ -502,7 +502,7 @@ export const beverageProducts: ProductWithDetails[] = [
     price: 110,
     image: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=400&h=400&fit=crop',
     category: 'beverages',
-    deliveryTime: '13 MINS',
+    rating: 4.3,
     description: 'Made from real fruit, this refreshing juice contains no added preservatives. Available in mango flavor, it provides natural vitamins and tastes delicious.',
     nutritionalInfo: {
       calories: '50 kcal',
@@ -521,7 +521,7 @@ export const beverageProducts: ProductWithDetails[] = [
     price: 20,
     image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=400&fit=crop',
     category: 'beverages',
-    deliveryTime: '13 MINS',
+    rating: 4.5,
     description: 'Pure and safe drinking water that goes through 10 stages of purification and 114 quality tests. Trusted by millions of Indians.',
     nutritionalInfo: {
       calories: '0 kcal',
@@ -539,7 +539,7 @@ export const beverageProducts: ProductWithDetails[] = [
     price: 40,
     image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400&h=400&fit=crop',
     category: 'beverages',
-    deliveryTime: '13 MINS',
+    rating: 4.4,
     description: 'The original cola drink with its iconic taste. Perfectly carbonated for that refreshing fizz. Best served chilled.',
     nutritionalInfo: {
       calories: '140 kcal',
@@ -558,7 +558,7 @@ export const beverageProducts: ProductWithDetails[] = [
     price: 99,
     image: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&h=400&fit=crop',
     category: 'beverages',
-    deliveryTime: '13 MINS',
+    rating: 4.6,
     description: '100% pure orange juice with no added sugar. Made from sun-ripened oranges, packed with Vitamin C to boost your immunity.',
     nutritionalInfo: {
       calories: '45 kcal',
@@ -577,7 +577,7 @@ export const beverageProducts: ProductWithDetails[] = [
     price: 125,
     image: 'https://images.unsplash.com/photo-1527960471264-932f39eb5846?w=400&h=400&fit=crop',
     category: 'beverages',
-    deliveryTime: '13 MINS',
+    rating: 4.2,
     description: 'Premium energy drink that gives you wings. Perfect for when you need an extra boost of energy and focus. Contains caffeine and B-vitamins.',
     nutritionalInfo: {
       calories: '110 kcal',
@@ -596,7 +596,7 @@ export const beverageProducts: ProductWithDetails[] = [
     price: 25,
     image: 'https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400&h=400&fit=crop',
     category: 'beverages',
-    deliveryTime: '13 MINS',
+    rating: 4.7,
     description: 'Traditional Indian yogurt-based drink, naturally sweet and refreshing. Made with fresh curd and a hint of cardamom. Perfect summer cooler.',
     nutritionalInfo: {
       calories: '90 kcal',

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Clock, Heart } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart, Product } from '@/contexts/CartContext';
@@ -48,10 +48,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          {/* Delivery Badge */}
+          {/* Rating Badge */}
           <div className="absolute top-3 left-3 bg-card/95 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 text-xs font-medium text-foreground shadow-sm">
-            <Clock className="h-3 w-3" />
-            {product.deliveryTime}
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            {product.rating.toFixed(1)}
           </div>
           {/* Wishlist Button */}
           <button

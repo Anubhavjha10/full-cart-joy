@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Clock, Truck, Shield, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Truck, Shield, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,8 +68,8 @@ const ProductDetail = () => {
                 className="w-full h-full object-cover"
               />
               <Badge className="absolute top-4 left-4 bg-card/95 text-foreground backdrop-blur-sm">
-                <Clock className="h-3 w-3 mr-1" />
-                {product.deliveryTime}
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                {product.rating.toFixed(1)}
               </Badge>
             </div>
           </div>
@@ -126,12 +126,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Features */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="flex flex-col items-center text-center p-4 bg-accent/50 rounded-lg">
-                <Clock className="h-6 w-6 text-primary mb-2" />
-                <span className="text-sm font-medium text-foreground">Fast Delivery</span>
-                <span className="text-xs text-muted-foreground">13 minutes</span>
-              </div>
+            <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="flex flex-col items-center text-center p-4 bg-accent/50 rounded-lg">
                 <Truck className="h-6 w-6 text-primary mb-2" />
                 <span className="text-sm font-medium text-foreground">Free Shipping</span>

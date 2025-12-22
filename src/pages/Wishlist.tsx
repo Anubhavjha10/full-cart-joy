@@ -73,7 +73,7 @@ const Wishlist = () => {
                 product={{
                   ...product,
                   category: product.category || 'General',
-                  deliveryTime: product.deliveryTime || '15 min',
+                  rating: product.rating || 4.5,
                 }}
               />
             ))}

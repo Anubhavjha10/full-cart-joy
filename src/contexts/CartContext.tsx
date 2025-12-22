@@ -10,7 +10,7 @@ export interface Product {
   price: number;
   image: string;
   category: string;
-  deliveryTime: string;
+  rating: number;
 }
 
 export interface CartItem extends Product {
@@ -65,7 +65,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         price: item.product_price,
         count: item.count,
         category: '',
-        deliveryTime: '13 MINS',
+        rating: 4.5,
       }));
 
       setItems(cartItems);
