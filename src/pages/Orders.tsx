@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ChevronRight, Calendar, Clock } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, Calendar, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import OrderTimeline from '@/components/OrderTimeline';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface OrderItem {
   id: string;
@@ -31,6 +33,7 @@ const Orders = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const { user } = useAuth();
 
   useEffect(() => {
@@ -69,16 +72,30 @@ const Orders = () => {
     }
   };
 
+  const toggleOrderExpand = (orderId: string) => {
+    setExpandedOrders((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-amber text-amber-foreground';
+        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
       case 'processing':
-        return 'bg-cyan text-cyan-foreground';
+        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      case 'shipped':
+        return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
       case 'delivered':
-        return 'bg-primary text-primary-foreground';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'cancelled':
-        return 'bg-destructive text-destructive-foreground';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -133,60 +150,119 @@ const Orders = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <Card key={order.id} className="p-6 animate-fade-in">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-muted-foreground">Order ID:</span>
-                      <span className="font-mono text-sm text-foreground">
-                        {order.id.slice(0, 8).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {format(new Date(order.created_at), 'MMM dd, yyyy')}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {format(new Date(order.created_at), 'hh:mm a')}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge className={getStatusColor(order.status)}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </Badge>
-                </div>
+            {orders.map((order) => {
+              const isExpanded = expandedOrders.has(order.id);
 
-                {order.order_items && order.order_items.length > 0 && (
-                  <div className="border-t border-border pt-4 mb-4">
-                    <div className="space-y-2">
-                      {order.order_items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span className="text-foreground">
-                            {item.product_name} x {item.quantity}
-                          </span>
-                          <span className="text-muted-foreground">
-                            ₹{item.product_price * item.quantity}
+              return (
+                <Card key={order.id} className="overflow-hidden animate-fade-in">
+                  {/* Order Header */}
+                  <div className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm text-muted-foreground">Order ID:</span>
+                          <span className="font-mono text-sm text-foreground">
+                            {order.id.slice(0, 8).toUpperCase()}
                           </span>
                         </div>
-                      ))}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {format(new Date(order.created_at), 'MMM dd, yyyy')}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {format(new Date(order.created_at), 'hh:mm a')}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge className={cn('border', getStatusColor(order.status))}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </Badge>
+                    </div>
+
+                    {order.order_items && order.order_items.length > 0 && (
+                      <div className="border-t border-border pt-4 mb-4">
+                        <div className="space-y-2">
+                          {order.order_items.slice(0, 2).map((item) => (
+                            <div key={item.id} className="flex justify-between text-sm">
+                              <span className="text-foreground">
+                                {item.product_name} x {item.quantity}
+                              </span>
+                              <span className="text-muted-foreground">
+                                ₹{item.product_price * item.quantity}
+                              </span>
+                            </div>
+                          ))}
+                          {order.order_items.length > 2 && (
+                            <p className="text-sm text-muted-foreground">
+                              +{order.order_items.length - 2} more items
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t border-border">
+                      <span className="font-bold text-lg text-foreground">
+                        Total: ₹{order.total_amount}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary"
+                        onClick={() => toggleOrderExpand(order.id)}
+                      >
+                        {isExpanded ? 'Hide' : 'Track Order'}
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4 ml-1" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 ml-1" />
+                        )}
+                      </Button>
                     </div>
                   </div>
-                )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <span className="font-bold text-lg text-foreground">
-                    Total: ₹{order.total_amount}
-                  </span>
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    View Details
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  {/* Expanded Timeline */}
+                  {isExpanded && (
+                    <div className="border-t border-border bg-muted/30 px-6 pb-6">
+                      <OrderTimeline status={order.status} createdAt={order.created_at} />
+
+                      {order.delivery_address && (
+                        <div className="mt-4 p-4 bg-card rounded-lg border border-border">
+                          <p className="text-sm font-medium text-foreground mb-1">
+                            Delivery Address
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {order.delivery_address}
+                          </p>
+                        </div>
+                      )}
+
+                      {order.order_items && order.order_items.length > 2 && (
+                        <div className="mt-4 p-4 bg-card rounded-lg border border-border">
+                          <p className="text-sm font-medium text-foreground mb-2">
+                            All Items
+                          </p>
+                          <div className="space-y-2">
+                            {order.order_items.map((item) => (
+                              <div key={item.id} className="flex justify-between text-sm">
+                                <span className="text-foreground">
+                                  {item.product_name} x {item.quantity}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  ₹{item.product_price * item.quantity}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>
