@@ -1,8 +1,34 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Clock, X } from 'lucide-react';
 import { getAllProducts, ProductWithDetails } from '@/data/products';
 import { cn } from '@/lib/utils';
+
+const SEARCH_HISTORY_KEY = 'search_history';
+const MAX_HISTORY_ITEMS = 5;
+
+const getSearchHistory = (): string[] => {
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveSearchHistory = (query: string) => {
+  if (!query.trim()) return;
+  const history = getSearchHistory();
+  const filtered = history.filter((item) => item.toLowerCase() !== query.toLowerCase());
+  const updated = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+  localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
+};
+
+const removeFromHistory = (query: string) => {
+  const history = getSearchHistory();
+  const updated = history.filter((item) => item.toLowerCase() !== query.toLowerCase());
+  localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
+};
 
 interface SearchAutocompleteProps {
   searchQuery: string;
@@ -20,11 +46,17 @@ const SearchAutocomplete = ({
   placeholder = 'Search "groceries"',
 }: SearchAutocompleteProps) => {
   const [suggestions, setSuggestions] = useState<ProductWithDetails[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showHistory, setShowHistory] = useState(false);
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setSearchHistory(getSearchHistory());
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
@@ -40,6 +72,7 @@ const SearchAutocomplete = ({
         .slice(0, 6);
       setSuggestions(filtered);
       setIsOpen(filtered.length > 0);
+      setShowHistory(false);
     } else {
       setSuggestions([]);
       setIsOpen(false);
@@ -51,6 +84,7 @@ const SearchAutocomplete = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setShowHistory(false);
       }
     };
 
@@ -58,9 +92,12 @@ const SearchAutocomplete = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const totalItems = showHistory ? searchHistory.length : suggestions.length;
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen) {
+    if (!isOpen && !showHistory) {
       if (e.key === 'Enter') {
+        saveSearchHistory(searchQuery);
         onSubmit(e);
       }
       return;
@@ -69,7 +106,7 @@ const SearchAutocomplete = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+        setSelectedIndex((prev) => (prev < totalItems - 1 ? prev + 1 : prev));
         break;
       case 'ArrowUp':
         e.preventDefault();
@@ -77,22 +114,50 @@ const SearchAutocomplete = ({
         break;
       case 'Enter':
         e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+        if (showHistory && selectedIndex >= 0 && selectedIndex < searchHistory.length) {
+          handleHistoryClick(searchHistory[selectedIndex]);
+        } else if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
           handleSuggestionClick(suggestions[selectedIndex]);
         } else {
           setIsOpen(false);
+          setShowHistory(false);
+          saveSearchHistory(searchQuery);
           onSubmit(e);
         }
         break;
       case 'Escape':
         setIsOpen(false);
+        setShowHistory(false);
         break;
     }
   };
 
   const handleSuggestionClick = (product: ProductWithDetails) => {
     setIsOpen(false);
+    setShowHistory(false);
+    saveSearchHistory(product.name);
     navigate(`/product/${product.id}`);
+  };
+
+  const handleHistoryClick = (query: string) => {
+    onSearchChange(query);
+    setShowHistory(false);
+    navigate(`/search?q=${encodeURIComponent(query)}`);
+  };
+
+  const handleRemoveHistory = (e: React.MouseEvent, query: string) => {
+    e.stopPropagation();
+    removeFromHistory(query);
+    setSearchHistory(getSearchHistory());
+  };
+
+  const handleFocus = () => {
+    if (searchQuery.trim().length < 2 && searchHistory.length > 0) {
+      setShowHistory(true);
+      setSelectedIndex(-1);
+    } else if (searchQuery.trim().length >= 2 && suggestions.length > 0) {
+      setIsOpen(true);
+    }
   };
 
   const highlightMatch = (text: string, query: string) => {
@@ -121,12 +186,43 @@ const SearchAutocomplete = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => searchQuery.trim().length >= 2 && suggestions.length > 0 && setIsOpen(true)}
+          onFocus={handleFocus}
           className="flex h-10 w-full rounded-lg border border-border bg-background px-3 py-2 pl-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           autoComplete="off"
         />
       </div>
 
+      {/* Search History Dropdown */}
+      {showHistory && searchHistory.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+          <div className="px-4 py-2 border-b border-border">
+            <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
+          </div>
+          {searchHistory.map((query, index) => (
+            <button
+              key={query}
+              onClick={() => handleHistoryClick(query)}
+              className={cn(
+                'w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
+                'hover:bg-accent',
+                selectedIndex === index && 'bg-accent'
+              )}
+            >
+              <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="flex-1 text-sm truncate">{query}</span>
+              <button
+                onClick={(e) => handleRemoveHistory(e, query)}
+                className="p-1 hover:bg-muted rounded-full transition-colors"
+                aria-label="Remove from history"
+              >
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Product Suggestions Dropdown */}
       {isOpen && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
           {suggestions.map((product, index) => (
