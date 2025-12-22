@@ -111,17 +111,28 @@ export default function OrderReviewDialog({
 
       if (orderError) throw orderError;
 
-      // Create notification for user
-      const notificationMessage =
-        outOfStockItems.size > 0
-          ? `Your order #${order.id.slice(0, 8).toUpperCase()} has been accepted. Some items were out of stock and have been removed. Adjusted total: ${formatCurrency(adjustedTotal)}`
-          : `Your order #${order.id.slice(0, 8).toUpperCase()} has been accepted and is being prepared.`;
+      // Create notification for user with detailed item info
+      let notificationMessage: string;
+      let notificationTitle: string;
+      
+      if (outOfStockItems.size > 0) {
+        const outOfStockItemNames = items
+          .filter((item) => outOfStockItems.has(item.id))
+          .map((item) => item.product_name)
+          .join(', ');
+        
+        notificationTitle = 'Order Accepted - Some Items Unavailable';
+        notificationMessage = `Your order #${order.id.slice(0, 8).toUpperCase()} has been accepted. Unfortunately, the following items were out of stock and have been removed: ${outOfStockItemNames}. Your adjusted total is ${formatCurrency(adjustedTotal)}. We are now processing the remaining items.`;
+      } else {
+        notificationTitle = 'Order Accepted';
+        notificationMessage = `Your order #${order.id.slice(0, 8).toUpperCase()} has been accepted and is being prepared.`;
+      }
 
       await supabase.from('notifications').insert({
         user_id: order.user_id,
         order_id: order.id,
         type: outOfStockItems.size > 0 ? 'item_out_of_stock' : 'order_accepted',
-        title: 'Order Accepted',
+        title: notificationTitle,
         message: notificationMessage,
       });
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 export interface OrderItem {
   id: string;
@@ -22,24 +21,15 @@ export interface Order {
   order_items?: OrderItem[];
 }
 
-export function useRealtimeOrders() {
+export function useAdminRealtimeOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   const fetchOrders = useCallback(async () => {
-    if (!user) {
-      setOrders([]);
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Fetch only the current user's orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
@@ -64,26 +54,23 @@ export function useRealtimeOrders() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchOrders();
 
-    if (!user) return;
-
-    // Subscribe to order changes
+    // Subscribe to ALL order changes (no user filter for admin)
     const ordersChannel = supabase
-      .channel('orders-realtime')
+      .channel('admin-orders-realtime')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'orders',
-          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Order update received:', payload);
+          console.log('Admin: Order update received:', payload);
           
           if (payload.eventType === 'UPDATE') {
             setOrders((prev) =>
@@ -94,8 +81,22 @@ export function useRealtimeOrders() {
               )
             );
           } else if (payload.eventType === 'INSERT') {
-            const newOrder = payload.new as Order;
-            setOrders((prev) => [{ ...newOrder, order_items: [] }, ...prev]);
+            // Fetch the new order with its items
+            const fetchNewOrder = async () => {
+              const newOrder = payload.new as Order;
+              const { data: itemsData } = await supabase
+                .from('order_items')
+                .select('*')
+                .eq('order_id', newOrder.id);
+              
+              setOrders((prev) => [
+                { ...newOrder, order_items: (itemsData || []) as OrderItem[] },
+                ...prev
+              ]);
+            };
+            fetchNewOrder();
+          } else if (payload.eventType === 'DELETE') {
+            setOrders((prev) => prev.filter((order) => order.id !== payload.old.id));
           }
         }
       )
@@ -103,26 +104,37 @@ export function useRealtimeOrders() {
 
     // Subscribe to order items changes
     const itemsChannel = supabase
-      .channel('order-items-realtime')
+      .channel('admin-order-items-realtime')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'order_items',
         },
         (payload) => {
-          console.log('Order item update received:', payload);
-          const updatedItem = payload.new as OrderItem;
+          console.log('Admin: Order item update received:', payload);
           
-          setOrders((prev) =>
-            prev.map((order) => ({
-              ...order,
-              order_items: order.order_items?.map((item) =>
-                item.id === updatedItem.id ? updatedItem : item
-              ),
-            }))
-          );
+          if (payload.eventType === 'UPDATE') {
+            const updatedItem = payload.new as OrderItem;
+            setOrders((prev) =>
+              prev.map((order) => ({
+                ...order,
+                order_items: order.order_items?.map((item) =>
+                  item.id === updatedItem.id ? updatedItem : item
+                ),
+              }))
+            );
+          } else if (payload.eventType === 'INSERT') {
+            const newItem = payload.new as OrderItem & { order_id: string };
+            setOrders((prev) =>
+              prev.map((order) =>
+                order.id === newItem.order_id
+                  ? { ...order, order_items: [...(order.order_items || []), newItem] }
+                  : order
+              )
+            );
+          }
         }
       )
       .subscribe();
@@ -131,7 +143,7 @@ export function useRealtimeOrders() {
       supabase.removeChannel(ordersChannel);
       supabase.removeChannel(itemsChannel);
     };
-  }, [user, fetchOrders]);
+  }, [fetchOrders]);
 
   return { orders, loading, refetch: fetchOrders };
 }

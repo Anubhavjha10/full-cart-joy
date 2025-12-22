@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck } from 'lucide-react';
+import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import OrderReviewDialog from '@/components/admin/OrderReviewDialog';
 import {
@@ -35,29 +35,10 @@ import {
   getStatusLabel,
   getStatusColor,
 } from '@/lib/orderStatusFlow';
-
-interface Order {
-  id: string;
-  user_id: string;
-  total_amount: number;
-  adjusted_amount: number | null;
-  status: string;
-  delivery_address: string | null;
-  created_at: string;
-}
-
-interface OrderItem {
-  id: string;
-  product_id: string;
-  product_name: string;
-  product_price: number;
-  quantity: number;
-  item_status: string;
-}
+import { useAdminRealtimeOrders, Order, OrderItem } from '@/hooks/useAdminRealtimeOrders';
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orders, loading, refetch } = useAdminRealtimeOrders();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -66,31 +47,6 @@ export default function AdminOrders() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [loadingItems, setLoadingItems] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setOrders((data || []) as Order[]);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch orders',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchOrderItems = async (orderId: string) => {
     setLoadingItems(true);
@@ -154,7 +110,7 @@ export default function AdminOrders() {
       });
 
       toast({ title: 'Order status updated' });
-      fetchOrders();
+      // Real-time will handle the update automatically
 
       if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
@@ -252,7 +208,13 @@ export default function AdminOrders() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Orders</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold">Orders</h1>
+          <Badge variant="outline" className="text-xs gap-1.5 animate-pulse">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            Live
+          </Badge>
+        </div>
       </div>
 
       <Card>
@@ -437,7 +399,7 @@ export default function AdminOrders() {
           items={orderItems}
           open={isReviewOpen}
           onOpenChange={setIsReviewOpen}
-          onOrderUpdated={fetchOrders}
+          onOrderUpdated={refetch}
         />
       )}
     </div>
