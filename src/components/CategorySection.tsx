@@ -10,6 +10,7 @@ import {
   Fish 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Category {
   icon: string;
@@ -18,6 +19,7 @@ interface Category {
 
 interface CategorySectionProps {
   categories: Category[];
+  isLoading?: boolean;
 }
 
 const categoryConfig: Record<string, { 
@@ -67,7 +69,16 @@ const categoryConfig: Record<string, {
   },
 };
 
-const CategorySection = ({ categories }: CategorySectionProps) => {
+const CategorySkeleton = () => (
+  <div className="flex flex-col items-center justify-center p-4 md:p-5 rounded-xl border border-border/50 bg-muted/30">
+    <div className="relative mb-3">
+      <Skeleton className="w-12 h-12 md:w-14 md:h-14 rounded-full" />
+    </div>
+    <Skeleton className="h-4 w-16 md:w-20" />
+  </div>
+);
+
+const CategorySection = ({ categories, isLoading = false }: CategorySectionProps) => {
   return (
     <section className="mt-10">
       {/* Section Header */}
@@ -80,68 +91,75 @@ const CategorySection = ({ categories }: CategorySectionProps) => {
 
       {/* Category Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4">
-        {categories.map((cat) => {
-          const config = categoryConfig[cat.label] || { 
-            Icon: Cookie, 
-            gradient: 'from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/30',
-            hoverGradient: 'group-hover:from-gray-100 group-hover:to-gray-200'
-          };
-          const { Icon, gradient, hoverGradient } = config;
-          const href = `/category/${cat.label.toLowerCase().replace(/\s+/g, '-')}`;
+        {isLoading ? (
+          // Skeleton loading state
+          Array.from({ length: 8 }).map((_, index) => (
+            <CategorySkeleton key={index} />
+          ))
+        ) : (
+          categories.map((cat) => {
+            const config = categoryConfig[cat.label] || { 
+              Icon: Cookie, 
+              gradient: 'from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/30',
+              hoverGradient: 'group-hover:from-gray-100 group-hover:to-gray-200'
+            };
+            const { Icon, gradient, hoverGradient } = config;
+            const href = `/category/${cat.label.toLowerCase().replace(/\s+/g, '-')}`;
 
-          return (
-            <Link
-              key={cat.label}
-              to={href}
-              className="group"
-            >
-              <div
-                className={cn(
-                  "relative flex flex-col items-center justify-center p-4 md:p-5 rounded-xl",
-                  "bg-gradient-to-br transition-all duration-300 ease-out",
-                  "border border-border/50 hover:border-primary/30",
-                  "hover:shadow-lg hover:shadow-primary/5",
-                  "hover:-translate-y-1",
-                  gradient,
-                  hoverGradient
-                )}
+            return (
+              <Link
+                key={cat.label}
+                to={href}
+                className="group"
               >
-                {/* Icon Container */}
-                <div className="relative mb-3">
-                  <div className={cn(
-                    "w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center",
-                    "bg-card shadow-sm",
-                    "group-hover:scale-110 group-hover:shadow-md",
-                    "transition-all duration-300 ease-out"
-                  )}>
-                    <Icon className="w-6 h-6 md:w-7 md:h-7 text-primary transition-transform duration-300 group-hover:scale-110" />
+                <div
+                  className={cn(
+                    "relative flex flex-col items-center justify-center p-4 md:p-5 rounded-xl",
+                    "bg-gradient-to-br transition-all duration-300 ease-out",
+                    "border border-border/50 hover:border-primary/30",
+                    "hover:shadow-lg hover:shadow-primary/5",
+                    "hover:-translate-y-1",
+                    gradient,
+                    hoverGradient
+                  )}
+                >
+                  {/* Icon Container */}
+                  <div className="relative mb-3">
+                    <div className={cn(
+                      "w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center",
+                      "bg-card shadow-sm",
+                      "group-hover:scale-110 group-hover:shadow-md",
+                      "transition-all duration-300 ease-out"
+                    )}>
+                      <Icon className="w-6 h-6 md:w-7 md:h-7 text-primary transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+                    
+                    {/* Decorative ring on hover */}
+                    <div className={cn(
+                      "absolute inset-0 rounded-full border-2 border-primary/0",
+                      "group-hover:border-primary/20 group-hover:scale-125",
+                      "transition-all duration-300 ease-out"
+                    )} />
                   </div>
-                  
-                  {/* Decorative ring on hover */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-full border-2 border-primary/0",
-                    "group-hover:border-primary/20 group-hover:scale-125",
-                    "transition-all duration-300 ease-out"
-                  )} />
+
+                  {/* Label */}
+                  <span className={cn(
+                    "text-xs md:text-sm font-medium text-foreground text-center",
+                    "transition-colors duration-300",
+                    "group-hover:text-primary"
+                  )}>
+                    {cat.label}
+                  </span>
+
+                  {/* Emoji fallback for visual interest */}
+                  <span className="absolute top-2 right-2 text-lg opacity-50 group-hover:opacity-80 transition-opacity duration-300">
+                    {cat.icon}
+                  </span>
                 </div>
-
-                {/* Label */}
-                <span className={cn(
-                  "text-xs md:text-sm font-medium text-foreground text-center",
-                  "transition-colors duration-300",
-                  "group-hover:text-primary"
-                )}>
-                  {cat.label}
-                </span>
-
-                {/* Emoji fallback for visual interest */}
-                <span className="absolute top-2 right-2 text-lg opacity-50 group-hover:opacity-80 transition-opacity duration-300">
-                  {cat.icon}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })
+        )}
       </div>
     </section>
   );
