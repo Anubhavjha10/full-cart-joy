@@ -48,7 +48,7 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
           image: item.product_image,
           quantity: item.product_quantity,
           category: '',
-          deliveryTime: '15 min',
+          rating: 4.5,
         }));
         setItems(wishlistItems);
       }
