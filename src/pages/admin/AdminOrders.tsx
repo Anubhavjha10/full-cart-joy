@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck, Radio } from 'lucide-react';
+import { Search, Loader2, ShoppingCart, Eye, ClipboardCheck, Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import OrderReviewDialog from '@/components/admin/OrderReviewDialog';
 import {
@@ -36,9 +36,11 @@ import {
   getStatusColor,
 } from '@/lib/orderStatusFlow';
 import { useAdminRealtimeOrders, Order, OrderItem } from '@/hooks/useAdminRealtimeOrders';
+import { useNewOrderAlerts } from '@/hooks/useNewOrderAlerts';
 
 export default function AdminOrders() {
   const { orders, loading, refetch } = useAdminRealtimeOrders();
+  const { requestPermission } = useNewOrderAlerts();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -215,6 +217,10 @@ export default function AdminOrders() {
             Live
           </Badge>
         </div>
+        <Button variant="outline" size="sm" onClick={requestPermission} className="gap-2">
+          <Bell className="h-4 w-4" />
+          Enable Alerts
+        </Button>
       </div>
 
       <Card>
