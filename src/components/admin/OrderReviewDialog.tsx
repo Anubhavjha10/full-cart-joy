@@ -136,6 +136,20 @@ export default function OrderReviewDialog({
         message: notificationMessage,
       });
 
+      // Trigger push notification
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: order.user_id,
+            title: notificationTitle,
+            body: notificationMessage,
+            data: { orderId: order.id, status: 'accepted', url: '/orders' },
+          },
+        });
+      } catch (pushError) {
+        console.log('Push notification not sent (may not be configured):', pushError);
+      }
+
       toast({ title: 'Order accepted successfully' });
       onOpenChange(false);
       onOrderUpdated();
@@ -162,14 +176,31 @@ export default function OrderReviewDialog({
 
       if (error) throw error;
 
+      const notificationTitle = 'Order Cancelled';
+      const notificationMessage = `Your order #${order.id.slice(0, 8).toUpperCase()} has been cancelled.`;
+
       // Create cancellation notification
       await supabase.from('notifications').insert({
         user_id: order.user_id,
         order_id: order.id,
         type: 'order_cancelled',
-        title: 'Order Cancelled',
-        message: `Your order #${order.id.slice(0, 8).toUpperCase()} has been cancelled.`,
+        title: notificationTitle,
+        message: notificationMessage,
       });
+
+      // Trigger push notification
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: order.user_id,
+            title: notificationTitle,
+            body: notificationMessage,
+            data: { orderId: order.id, status: 'cancelled', url: '/orders' },
+          },
+        });
+      } catch (pushError) {
+        console.log('Push notification not sent (may not be configured):', pushError);
+      }
 
       toast({ title: 'Order cancelled' });
       onOpenChange(false);

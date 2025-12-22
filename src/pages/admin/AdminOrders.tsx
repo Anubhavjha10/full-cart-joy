@@ -100,14 +100,31 @@ export default function AdminOrders() {
 
       if (error) throw error;
 
+      const notificationTitle = `Order ${getStatusLabel(newStatus)}`;
+      const notificationMessage = `Your order #${orderId.slice(0, 8).toUpperCase()} is now ${getStatusLabel(newStatus).toLowerCase()}.`;
+
       // Create notification for status change
       await supabase.from('notifications').insert({
         user_id: order.user_id,
         order_id: orderId,
         type: `order_${newStatus}`,
-        title: `Order ${getStatusLabel(newStatus)}`,
-        message: `Your order #${orderId.slice(0, 8).toUpperCase()} is now ${getStatusLabel(newStatus).toLowerCase()}.`,
+        title: notificationTitle,
+        message: notificationMessage,
       });
+
+      // Trigger push notification
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: order.user_id,
+            title: notificationTitle,
+            body: notificationMessage,
+            data: { orderId, status: newStatus, url: '/orders' },
+          },
+        });
+      } catch (pushError) {
+        console.log('Push notification not sent (may not be configured):', pushError);
+      }
 
       toast({ title: 'Order status updated' });
       // Real-time will handle the update automatically
