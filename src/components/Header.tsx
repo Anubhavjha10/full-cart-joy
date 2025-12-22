@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, User, ShoppingCart, LogOut, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,22 @@ interface HeaderProps {
 const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
   const { totalItems } = useCart();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate('/search');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit(e);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
@@ -34,7 +50,7 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
           </Link>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-xl hidden md:block">
+          <form onSubmit={handleSearchSubmit} className="flex-1 max-w-xl hidden md:block">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -42,10 +58,11 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
                 placeholder='Search "groceries"'
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="pl-10 bg-background border-border rounded-lg"
               />
             </div>
-          </div>
+          </form>
 
           {/* Actions */}
           <div className="flex items-center gap-3">
@@ -99,7 +116,7 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
         </div>
 
         {/* Mobile Search */}
-        <div className="mt-3 md:hidden">
+        <form onSubmit={handleSearchSubmit} className="mt-3 md:hidden">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -107,10 +124,11 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
               placeholder='Search "groceries"'
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-10 bg-background border-border rounded-lg"
             />
           </div>
-        </div>
+        </form>
       </div>
     </header>
   );
