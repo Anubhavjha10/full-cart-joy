@@ -1,13 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, MapPin, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { z } from 'zod';
+
+interface SavedAddress {
+  id: string;
+  label: string;
+  address_line: string;
+  city: string | null;
+  pincode: string | null;
+  is_default: boolean;
+}
+
+interface Profile {
+  phone: string | null;
+  full_name: string | null;
+}
+
+const phoneSchema = z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number');
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, clearCart, totalPrice, placeOrder } = useCart();
@@ -16,6 +43,104 @@ const Cart = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [useNewAddress, setUseNewAddress] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchSavedAddresses();
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchSavedAddresses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_addresses')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('is_default', { ascending: false });
+
+      if (error) throw error;
+      setSavedAddresses(data || []);
+      
+      // Auto-select default address
+      const defaultAddr = data?.find((a) => a.is_default);
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
+        setDeliveryAddress(formatAddress(defaultAddr));
+      }
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('phone, full_name')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const formatAddress = (addr: SavedAddress) => {
+    let formatted = addr.address_line;
+    if (addr.city) formatted += `, ${addr.city}`;
+    if (addr.pincode) formatted += ` - ${addr.pincode}`;
+    return formatted;
+  };
+
+  const handleAddressSelect = (addr: SavedAddress) => {
+    setSelectedAddressId(addr.id);
+    setDeliveryAddress(formatAddress(addr));
+    setUseNewAddress(false);
+  };
+
+  const handleNewAddressToggle = () => {
+    setUseNewAddress(true);
+    setSelectedAddressId(null);
+    setDeliveryAddress('');
+  };
+
+  const savePhone = async () => {
+    const result = phoneSchema.safeParse(phoneInput);
+    if (!result.success) {
+      setPhoneError(result.error.errors[0].message);
+      return;
+    }
+    setPhoneError('');
+    setSavingPhone(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone: phoneInput })
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+      setProfile((prev) => prev ? { ...prev, phone: phoneInput } : { phone: phoneInput, full_name: null });
+      setShowPhoneDialog(false);
+      toast.success('Phone number saved');
+    } catch (error) {
+      console.error('Error saving phone:', error);
+      toast.error('Failed to save phone number');
+    } finally {
+      setSavingPhone(false);
+    }
+  };
 
   const handlePlaceOrder = async () => {
     if (!user) {
@@ -23,7 +148,14 @@ const Cart = () => {
       return;
     }
 
+    // Check if phone number is set
+    if (!profile?.phone) {
+      setShowPhoneDialog(true);
+      return;
+    }
+
     if (!deliveryAddress.trim()) {
+      toast.error('Please select or enter a delivery address');
       return;
     }
 
@@ -167,17 +299,91 @@ const Cart = () => {
 
               {user ? (
                 <div className="space-y-4">
+                  {/* Profile completion warning */}
+                  {!profile?.phone && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-600">Phone number required</p>
+                        <p className="text-muted-foreground">Add your phone number to place orders</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Delivery Address Section */}
                   <div>
-                    <label htmlFor="address" className="text-sm font-medium text-foreground mb-2 block">
+                    <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
                       Delivery Address
                     </label>
-                    <Input
-                      id="address"
-                      placeholder="Enter your delivery address"
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                    />
+
+                    {/* Saved Addresses */}
+                    {savedAddresses.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {savedAddresses.map((addr) => (
+                          <button
+                            key={addr.id}
+                            onClick={() => handleAddressSelect(addr)}
+                            className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                              selectedAddressId === addr.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-foreground text-sm">{addr.label}</span>
+                                {addr.is_default && (
+                                  <Badge variant="secondary" className="text-xs">Default</Badge>
+                                )}
+                              </div>
+                              {selectedAddressId === addr.id && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                              {formatAddress(addr)}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* New Address Option */}
+                    <button
+                      onClick={handleNewAddressToggle}
+                      className={`w-full text-left p-3 rounded-lg border transition-colors mb-2 ${
+                        useNewAddress
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          + Enter new address
+                        </span>
+                        {useNewAddress && <Check className="h-4 w-4 text-primary" />}
+                      </div>
+                    </button>
+
+                    {useNewAddress && (
+                      <Input
+                        placeholder="Enter your delivery address"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        className="mt-2"
+                      />
+                    )}
+
+                    {savedAddresses.length === 0 && !useNewAddress && (
+                      <Input
+                        placeholder="Enter your delivery address"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                      />
+                    )}
                   </div>
+
                   <Button
                     onClick={handlePlaceOrder}
                     disabled={isPlacingOrder || !deliveryAddress.trim()}
@@ -201,6 +407,36 @@ const Cart = () => {
           </div>
         </div>
       </main>
+
+      {/* Phone Number Dialog */}
+      <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Phone Number</DialogTitle>
+            <DialogDescription>
+              Please add your phone number to place orders. This is required for delivery updates.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium">Phone Number</label>
+              <Input
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                placeholder="Enter 10-digit phone number"
+                maxLength={10}
+                className="mt-1"
+              />
+              {phoneError && (
+                <p className="text-sm text-destructive mt-1">{phoneError}</p>
+              )}
+            </div>
+            <Button className="w-full" onClick={savePhone} disabled={savingPhone}>
+              {savingPhone ? 'Saving...' : 'Save & Continue'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
