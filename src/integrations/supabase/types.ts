@@ -145,6 +145,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_addresses: {
+        Row: {
+          address_line: string
+          city: string | null
+          created_at: string
+          id: string
+          is_default: boolean | null
+          label: string
+          pincode: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          pincode?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line?: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          pincode?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wishlist_items: {
         Row: {
           created_at: string
