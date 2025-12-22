@@ -11,6 +11,7 @@ import ProductCard from '@/components/ProductCard';
 import ProductReviews from '@/components/ProductReviews';
 import { useCart } from '@/contexts/CartContext';
 import { getProductById, getRelatedProducts } from '@/data/products';
+import { useProductRating } from '@/hooks/useProductRatings';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,7 @@ const ProductDetail = () => {
   const product = id ? getProductById(id) : undefined;
   const relatedProducts = id ? getRelatedProducts(id, 4) : [];
   const cartItem = items.find((item) => item.id === product?.id);
+  const { rating, loading: ratingLoading } = useProductRating(product?.id || '');
 
   if (!product) {
     return (
@@ -69,7 +71,13 @@ const ProductDetail = () => {
               />
               <Badge className="absolute top-4 left-4 bg-card/95 text-foreground backdrop-blur-sm">
                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
-                {product.rating.toFixed(1)}
+                {ratingLoading ? (
+                  '...'
+                ) : rating ? (
+                  <span>{rating.averageRating.toFixed(1)} ({rating.reviewCount})</span>
+                ) : (
+                  product.rating.toFixed(1)
+                )}
               </Badge>
             </div>
           </div>

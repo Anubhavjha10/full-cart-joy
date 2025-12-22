@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart, Product } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useProductRating } from '@/hooks/useProductRatings';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -13,6 +14,7 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart, items, updateQuantity } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { rating, loading: ratingLoading } = useProductRating(product.id);
   const cartItem = items.find((item) => item.id === product.id);
   const inWishlist = isInWishlist(product.id);
 
@@ -51,7 +53,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {/* Rating Badge */}
           <div className="absolute top-3 left-3 bg-card/95 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 text-xs font-medium text-foreground shadow-sm">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            {product.rating.toFixed(1)}
+            {ratingLoading ? (
+              <span className="w-6 h-3 bg-muted animate-pulse rounded" />
+            ) : rating ? (
+              <span>{rating.averageRating.toFixed(1)} ({rating.reviewCount})</span>
+            ) : (
+              <span>{product.rating.toFixed(1)}</span>
+            )}
           </div>
           {/* Wishlist Button */}
           <button
