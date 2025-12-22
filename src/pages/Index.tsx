@@ -76,7 +76,7 @@ const Index = () => {
                 key={cat.label}
                 icon={cat.icon}
                 label={cat.label}
-                onClick={() => setSearchQuery(cat.label.split(' ')[0].toLowerCase())}
+                href={`/category/${cat.label.toLowerCase().replace(/\s+/g, '-')}`}
               />
             ))}
           </div>

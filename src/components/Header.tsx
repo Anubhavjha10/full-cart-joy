@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, User, ShoppingCart, LogOut, Package } from 'lucide-react';
+import { Search, User, ShoppingCart, LogOut, Package, Heart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 interface HeaderProps {
   searchQuery: string;
@@ -20,6 +21,7 @@ interface HeaderProps {
 const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
   const { totalItems } = useCart();
   const { user, signOut } = useAuth();
+  const { items: wishlistItems } = useWishlist();
   const navigate = useNavigate();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -77,6 +79,12 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/wishlist" className="flex items-center gap-2 cursor-pointer">
+                      <Heart className="h-4 w-4" />
+                      My Wishlist
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/orders" className="flex items-center gap-2 cursor-pointer">
                       <Package className="h-4 w-4" />
