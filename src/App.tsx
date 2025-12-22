@@ -2,13 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import Index from "./pages/Index";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Orders from "./pages/Orders";
 import ProductDetail from "./pages/ProductDetail";
 import SearchResults from "./pages/SearchResults";
@@ -19,7 +20,6 @@ import NotFound from "./pages/NotFound";
 
 // Admin imports
 import { AdminLayout } from "./components/admin/AdminLayout";
-import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -48,6 +48,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/product/:id" element={<ProductDetailWrapper />} />
@@ -55,8 +56,8 @@ const App = () => (
                 <Route path="/category/:categoryId" element={<Category />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 
-                {/* Admin Routes */}
-                <Route path="/admin/login" element={<AdminLogin />} />
+                {/* Admin Routes - redirect /admin/login to /auth */}
+                <Route path="/admin/login" element={<Navigate to="/auth" replace />} />
                 <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                 <Route path="/admin/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
                 <Route path="/admin/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
