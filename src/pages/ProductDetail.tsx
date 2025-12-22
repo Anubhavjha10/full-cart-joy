@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import ProductReviews from '@/components/ProductReviews';
 import { useCart } from '@/contexts/CartContext';
 import { getProductById, getRelatedProducts } from '@/data/products';
 
@@ -177,6 +178,9 @@ const ProductDetail = () => {
                 )}
               </div>
             </Card>
+
+            {/* Product Reviews */}
+            <ProductReviews productId={product.id} />
           </div>
         </div>
 
