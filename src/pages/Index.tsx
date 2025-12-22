@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import HeroBanner from '@/components/HeroBanner';
 import PromoCategoryCard from '@/components/PromoCategoryCard';
-import CategoryIcon from '@/components/CategoryIcon';
+import CategorySection from '@/components/CategorySection';
 import ProductSection from '@/components/ProductSection';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import Footer from '@/components/Footer';
@@ -80,19 +80,8 @@ const Index = () => {
           />
         </section>
 
-        {/* Category Icons */}
-        <section className="mt-10 overflow-x-auto">
-          <div className="flex justify-start md:justify-center gap-2 md:gap-4 pb-2">
-            {categories.map((cat) => (
-              <CategoryIcon
-                key={cat.label}
-                icon={cat.icon}
-                label={cat.label}
-                href={`/category/${cat.label.toLowerCase().replace(/\s+/g, '-')}`}
-              />
-            ))}
-          </div>
-        </section>
+        {/* Category Section */}
+        <CategorySection categories={categories} />
 
         {/* Featured Products Carousel */}
         {!searchQuery && (
