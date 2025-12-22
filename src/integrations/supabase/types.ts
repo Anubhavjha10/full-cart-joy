@@ -524,7 +524,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_product_reviews: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_own_review: boolean | null
+          product_id: string | null
+          rating: number | null
+          review_text: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_own_review?: never
+          product_id?: string | null
+          rating?: number | null
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_own_review?: never
+          product_id?: string | null
+          rating?: number | null
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_role: {
