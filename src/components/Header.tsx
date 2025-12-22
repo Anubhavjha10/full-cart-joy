@@ -12,6 +12,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
+import NotificationBell from '@/components/NotificationBell';
 
 interface HeaderProps {
   searchQuery: string;
@@ -55,7 +56,8 @@ const Header = ({ searchQuery, onSearchChange }: HeaderProps) => {
           />
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {user && <NotificationBell />}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ChevronDown, ChevronUp, Calendar, Clock } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,69 +8,16 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import OrderTimeline from '@/components/OrderTimeline';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeOrders, Order, OrderItem } from '@/hooks/useRealtimeOrders';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-interface OrderItem {
-  id: string;
-  product_id: string;
-  product_name: string;
-  product_price: number;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  total_amount: number;
-  status: string;
-  delivery_address: string | null;
-  created_at: string;
-  order_items?: OrderItem[];
-}
+import { getStatusLabel, getStatusColor } from '@/lib/orderStatusFlow';
 
 const Orders = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchOrders = async () => {
-    try {
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (ordersError) throw ordersError;
-
-      // Fetch order items for each order
-      const ordersWithItems = await Promise.all(
-        (ordersData || []).map(async (order) => {
-          const { data: itemsData } = await supabase
-            .from('order_items')
-            .select('*')
-            .eq('order_id', order.id);
-          return { ...order, order_items: itemsData || [] };
-        })
-      );
-
-      setOrders(ordersWithItems);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { orders, loading } = useRealtimeOrders();
 
   const toggleOrderExpand = (orderId: string) => {
     setExpandedOrders((prev) => {
@@ -84,12 +31,14 @@ const Orders = () => {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColorClass = (status: string) => {
     switch (status) {
       case 'pending':
         return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'processing':
+      case 'accepted':
         return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      case 'packed':
+        return 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20';
       case 'out_for_delivery':
         return 'bg-purple-500/10 text-purple-600 border-purple-500/20';
       case 'delivered':
@@ -99,6 +48,16 @@ const Orders = () => {
       default:
         return 'bg-muted text-muted-foreground';
     }
+  };
+
+  const getOutOfStockItems = (items: OrderItem[] | undefined) => {
+    if (!items) return [];
+    return items.filter((item) => item.item_status === 'out_of_stock');
+  };
+
+  const getAvailableItems = (items: OrderItem[] | undefined) => {
+    if (!items) return [];
+    return items.filter((item) => item.item_status !== 'out_of_stock');
   };
 
   if (!user) {
@@ -152,6 +111,10 @@ const Orders = () => {
           <div className="space-y-4">
             {orders.map((order) => {
               const isExpanded = expandedOrders.has(order.id);
+              const outOfStockItems = getOutOfStockItems(order.order_items);
+              const availableItems = getAvailableItems(order.order_items);
+              const hasOutOfStock = outOfStockItems.length > 0;
+              const displayAmount = order.adjusted_amount ?? order.total_amount;
 
               return (
                 <Card key={order.id} className="overflow-hidden animate-fade-in">
@@ -176,15 +139,30 @@ const Orders = () => {
                           </span>
                         </div>
                       </div>
-                      <Badge className={cn('border', getStatusColor(order.status))}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      <Badge className={cn('border', getStatusColorClass(order.status))}>
+                        {getStatusLabel(order.status)}
                       </Badge>
                     </div>
 
-                    {order.order_items && order.order_items.length > 0 && (
+                    {/* Out of stock warning */}
+                    {hasOutOfStock && (
+                      <div className="flex items-start gap-2 p-3 mb-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg text-amber-800 dark:text-amber-200">
+                        <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p className="font-medium">
+                            {outOfStockItems.length} item(s) were out of stock
+                          </p>
+                          <p className="text-amber-600 dark:text-amber-300">
+                            {outOfStockItems.map((item) => item.product_name).join(', ')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {availableItems.length > 0 && (
                       <div className="border-t border-border pt-4 mb-4">
                         <div className="space-y-2">
-                          {order.order_items.slice(0, 2).map((item) => (
+                          {availableItems.slice(0, 2).map((item) => (
                             <div key={item.id} className="flex justify-between text-sm">
                               <span className="text-foreground">
                                 {item.product_name} x {item.quantity}
@@ -194,9 +172,9 @@ const Orders = () => {
                               </span>
                             </div>
                           ))}
-                          {order.order_items.length > 2 && (
+                          {availableItems.length > 2 && (
                             <p className="text-sm text-muted-foreground">
-                              +{order.order_items.length - 2} more items
+                              +{availableItems.length - 2} more items
                             </p>
                           )}
                         </div>
@@ -204,9 +182,16 @@ const Orders = () => {
                     )}
 
                     <div className="flex items-center justify-between pt-4 border-t border-border">
-                      <span className="font-bold text-lg text-foreground">
-                        Total: ₹{order.total_amount}
-                      </span>
+                      <div>
+                        <span className="font-bold text-lg text-foreground">
+                          Total: ₹{displayAmount}
+                        </span>
+                        {order.adjusted_amount && order.adjusted_amount !== order.total_amount && (
+                          <span className="text-sm text-muted-foreground line-through ml-2">
+                            ₹{order.total_amount}
+                          </span>
+                        )}
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -239,18 +224,35 @@ const Orders = () => {
                         </div>
                       )}
 
-                      {order.order_items && order.order_items.length > 2 && (
+                      {order.order_items && order.order_items.length > 0 && (
                         <div className="mt-4 p-4 bg-card rounded-lg border border-border">
                           <p className="text-sm font-medium text-foreground mb-2">
                             All Items
                           </p>
                           <div className="space-y-2">
                             {order.order_items.map((item) => (
-                              <div key={item.id} className="flex justify-between text-sm">
-                                <span className="text-foreground">
+                              <div
+                                key={item.id}
+                                className={cn(
+                                  'flex justify-between text-sm',
+                                  item.item_status === 'out_of_stock' && 'opacity-50'
+                                )}
+                              >
+                                <span className={cn(
+                                  'text-foreground',
+                                  item.item_status === 'out_of_stock' && 'line-through'
+                                )}>
                                   {item.product_name} x {item.quantity}
+                                  {item.item_status === 'out_of_stock' && (
+                                    <Badge variant="destructive" className="ml-2 text-xs">
+                                      Out of Stock
+                                    </Badge>
+                                  )}
                                 </span>
-                                <span className="text-muted-foreground">
+                                <span className={cn(
+                                  'text-muted-foreground',
+                                  item.item_status === 'out_of_stock' && 'line-through'
+                                )}>
                                   ₹{item.product_price * item.quantity}
                                 </span>
                               </div>
