@@ -1,4 +1,4 @@
-import { Bell, Volume2, VolumeX, BellRing } from 'lucide-react';
+import { Bell, Volume2, VolumeX, BellRing, BellPlus, BellOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -7,7 +7,9 @@ import {
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useOrderNotifications, Notification } from '@/hooks/useOrderNotifications';
+import { Separator } from '@/components/ui/separator';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
@@ -22,6 +24,14 @@ export default function NotificationBell() {
     toggleMute,
     requestBrowserPermission,
   } = useOrderNotifications();
+  
+  const {
+    isSupported: isPushSupported,
+    isSubscribed: isPushSubscribed,
+    isLoading: isPushLoading,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+  } = usePushNotifications();
   
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -58,6 +68,14 @@ export default function NotificationBell() {
     }
   };
 
+  const handlePushToggle = () => {
+    if (isPushSubscribed) {
+      unsubscribePush();
+    } else {
+      subscribePush();
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -86,7 +104,7 @@ export default function NotificationBell() {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h4 className="font-semibold text-sm">Notifications</h4>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
@@ -100,11 +118,29 @@ export default function NotificationBell() {
                 <Volume2 className="h-4 w-4" />
               )}
             </Button>
+            {isPushSupported && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handlePushToggle}
+                disabled={isPushLoading}
+                title={isPushSubscribed ? "Disable push notifications" : "Enable push notifications"}
+              >
+                {isPushLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isPushSubscribed ? (
+                  <BellOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <BellPlus className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-primary h-auto py-1"
+                className="text-xs text-primary h-auto py-1 px-2"
                 onClick={markAllAsRead}
               >
                 Mark all read
@@ -112,7 +148,25 @@ export default function NotificationBell() {
             )}
           </div>
         </div>
-        <ScrollArea className="h-[300px]">
+        
+        {/* Push notification status */}
+        {isPushSupported && (
+          <div className="px-4 py-2 bg-muted/30 border-b">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                Push notifications
+              </span>
+              <span className={cn(
+                "font-medium",
+                isPushSubscribed ? "text-primary" : "text-muted-foreground"
+              )}>
+                {isPushSubscribed ? "Enabled" : "Disabled"}
+              </span>
+            </div>
+          </div>
+        )}
+        
+        <ScrollArea className="h-[280px]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Bell className="h-8 w-8 mb-2 opacity-50" />
