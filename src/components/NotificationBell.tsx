@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react';
+import { Bell, Volume2, VolumeX, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -10,9 +10,34 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useOrderNotifications, Notification } from '@/hooks/useOrderNotifications';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 export default function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useOrderNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead,
+    isMuted,
+    toggleMute,
+    requestBrowserPermission,
+  } = useOrderNotifications();
+  
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Animate bell when new notification arrives
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [unreadCount]);
+
+  // Request browser permission on mount
+  useEffect(() => {
+    requestBrowserPermission();
+  }, [requestBrowserPermission]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -36,11 +61,22 @@ export default function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "relative",
+            isAnimating && "animate-pulse"
+          )}
+        >
+          {isAnimating ? (
+            <BellRing className="h-5 w-5 text-primary animate-wiggle" />
+          ) : (
+            <Bell className="h-5 w-5" />
+          )}
           {unreadCount > 0 && (
             <Badge
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive animate-pulse"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
@@ -50,16 +86,31 @@ export default function NotificationBell() {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h4 className="font-semibold text-sm">Notifications</h4>
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
-              size="sm"
-              className="text-xs text-primary h-auto py-1"
-              onClick={markAllAsRead}
+              size="icon"
+              className="h-7 w-7"
+              onClick={toggleMute}
+              title={isMuted ? "Unmute notifications" : "Mute notifications"}
             >
-              Mark all read
+              {isMuted ? (
+                <VolumeX className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
             </Button>
-          )}
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-primary h-auto py-1"
+                onClick={markAllAsRead}
+              >
+                Mark all read
+              </Button>
+            )}
+          </div>
         </div>
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 ? (
