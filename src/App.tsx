@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminBulkImport from "./pages/admin/AdminBulkImport";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -68,6 +69,7 @@ const App = () => (
                 <Route path="/admin/login" element={<Navigate to="/auth" replace />} />
                 <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                 <Route path="/admin/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
+                <Route path="/admin/bulk-import" element={<AdminLayout><AdminBulkImport /></AdminLayout>} />
                 <Route path="/admin/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
                 <Route path="/admin/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
                 <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
