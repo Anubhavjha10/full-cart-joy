@@ -6,7 +6,9 @@ import {
   Image, 
   Settings,
   LogOut,
-  FolderTree
+  FolderTree,
+  Megaphone,
+  Flame
 } from 'lucide-react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -35,6 +37,8 @@ const menuItems = [
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart, showBadge: true },
   { title: 'Users', url: '/admin/users', icon: Users },
   { title: 'Banners', url: '/admin/banners', icon: Image },
+  { title: 'Notices', url: '/admin/notices', icon: Megaphone },
+  { title: 'Offers', url: '/admin/offers', icon: Flame },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
 

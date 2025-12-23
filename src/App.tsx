@@ -30,6 +30,8 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminNotices from "./pages/admin/AdminNotices";
+import AdminOffers from "./pages/admin/AdminOffers";
 
 // Wrapper to force remount on product ID change for proper history handling
 const ProductDetailWrapper = () => {
@@ -70,6 +72,8 @@ const App = () => (
                 <Route path="/admin/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
                 <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
                 <Route path="/admin/banners" element={<AdminLayout><AdminBanners /></AdminLayout>} />
+                <Route path="/admin/notices" element={<AdminLayout><AdminNotices /></AdminLayout>} />
+                <Route path="/admin/offers" element={<AdminLayout><AdminOffers /></AdminLayout>} />
                 <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

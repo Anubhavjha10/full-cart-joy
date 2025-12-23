@@ -195,6 +195,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notices: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -544,6 +571,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      special_offers: {
+        Row: {
+          created_at: string
+          cta_link: string | null
+          cta_text: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
