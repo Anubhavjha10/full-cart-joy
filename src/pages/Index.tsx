@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import HeroBanner from '@/components/HeroBanner';
 import NoticeBox from '@/components/NoticeBox';
@@ -8,52 +8,18 @@ import ProductSection from '@/components/ProductSection';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import Footer from '@/components/Footer';
 import MobileNavbar from '@/components/MobileNavbar';
-import {
-  categories,
-  dairyProducts,
-  vegetableProducts,
-  snackProducts,
-  breakfastProducts,
-  beverageProducts,
-} from '@/data/products';
+import { useCategories } from '@/hooks/useCategories';
+import { useFeaturedProducts, useProductsByCategories } from '@/hooks/useProducts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { products: featuredProducts, loading: featuredLoading } = useFeaturedProducts();
+  const { data: productsByCategory, loading: productsLoading } = useProductsByCategories();
 
-  // Featured products - pick a mix for the carousel
-  const featuredProducts = useMemo(() => {
-    const featured = [
-      ...dairyProducts.slice(0, 2),
-      ...snackProducts.slice(0, 2),
-      ...beverageProducts.slice(0, 2),
-      ...breakfastProducts.slice(0, 2),
-    ];
-    return featured;
-  }, []);
-
-  // Filter products based on search query
-  const filterProducts = (products: typeof dairyProducts) => {
-    if (!searchQuery.trim()) return products;
-    const query = searchQuery.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.category.toLowerCase().includes(query)
-    );
-  };
-
-  const filteredDairy = useMemo(() => filterProducts(dairyProducts), [searchQuery]);
-  const filteredVegetables = useMemo(() => filterProducts(vegetableProducts), [searchQuery]);
-  const filteredSnacks = useMemo(() => filterProducts(snackProducts), [searchQuery]);
-  const filteredBreakfast = useMemo(() => filterProducts(breakfastProducts), [searchQuery]);
-  const filteredBeverages = useMemo(() => filterProducts(beverageProducts), [searchQuery]);
-
-  const hasResults =
-    filteredDairy.length > 0 ||
-    filteredVegetables.length > 0 ||
-    filteredSnacks.length > 0 ||
-    filteredBreakfast.length > 0 ||
-    filteredBeverages.length > 0;
+  // Convert Map to array for rendering
+  const categoryProductSections = Array.from(productsByCategory.entries());
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
@@ -70,70 +36,73 @@ const Index = () => {
         </section>
 
         {/* Category Section */}
-        <CategorySection categories={categories} />
+        <CategorySection categories={categories} isLoading={categoriesLoading} />
 
         {/* Featured Products Carousel */}
         {!searchQuery && (
-          <FeaturedCarousel 
-            title="Featured Products" 
-            products={featuredProducts} 
-            icon="sparkles" 
-          />
+          featuredLoading ? (
+            <section className="py-6">
+              <Skeleton className="h-8 w-48 mb-4" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-64 rounded-xl" />
+                ))}
+              </div>
+            </section>
+          ) : featuredProducts.length > 0 && (
+            <FeaturedCarousel 
+              title="Featured Products" 
+              products={featuredProducts.map(p => ({
+                id: p.id,
+                name: p.name,
+                quantity: p.unit,
+                price: p.price,
+                image: p.image_url || '/placeholder.svg',
+                category: p.category?.slug || '',
+                rating: 4.5,
+              }))} 
+              icon="sparkles" 
+            />
+          )
         )}
 
-        {/* Product Sections */}
-        {!hasResults && searchQuery && (
+        {/* Product Sections by Category */}
+        {productsLoading ? (
+          <div className="space-y-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <section key={i} className="py-6">
+                <Skeleton className="h-8 w-48 mb-4" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <Skeleton key={j} className="h-64 rounded-xl" />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : categoryProductSections.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">
-              No products found for "{searchQuery}"
+              No products available yet. Add products from the Admin Panel.
             </p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="text-primary underline mt-2"
-            >
-              Clear search
-            </button>
           </div>
-        )}
-
-        {filteredDairy.length > 0 && (
-          <ProductSection 
-            title="Dairy, Bread & Eggs" 
-            products={filteredDairy} 
-            categorySlug="dairy-&-eggs"
-          />
-        )}
-
-        {filteredVegetables.length > 0 && (
-          <ProductSection 
-            title="Fruits & Vegetables" 
-            products={filteredVegetables} 
-            categorySlug="vegetables"
-          />
-        )}
-
-        {filteredSnacks.length > 0 && (
-          <ProductSection 
-            title="Snacks & Munchies" 
-            products={filteredSnacks} 
-            categorySlug="snacks"
-          />
-        )}
-
-        {filteredBreakfast.length > 0 && (
-          <ProductSection 
-            title="Breakfast & Instant Food" 
-            products={filteredBreakfast} 
-            categorySlug="bakery"
-          />
-        )}
-
-        {filteredBeverages.length > 0 && (
-          <ProductSection 
-            title="Cold Drinks & Juices" 
-            products={filteredBeverages} 
-            categorySlug="beverages"
-          />
+        ) : (
+          categoryProductSections.map(([categoryName, products]) => (
+            <ProductSection 
+              key={categoryName}
+              title={categoryName} 
+              products={products.map(p => ({
+                id: p.id,
+                name: p.name,
+                quantity: p.unit,
+                price: p.price,
+                image: p.image_url || '/placeholder.svg',
+                category: p.category?.slug || '',
+                rating: 4.5,
+              }))} 
+              categorySlug={products[0]?.category?.slug}
+            />
+          ))
         )}
       </main>
 
