@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingCart, Users, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Package, ShoppingCart, Users, TrendingUp, ArrowUpRight, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LowStockAlert } from '@/components/admin/LowStockAlert';
 
 interface DashboardStats {
   totalOrders: number;
@@ -184,6 +185,9 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Low Stock Alerts */}
+      <LowStockAlert limit={5} showViewAll={true} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="col-span-1">

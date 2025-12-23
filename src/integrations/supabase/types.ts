@@ -24,6 +24,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           is_featured: boolean | null
+          low_stock_threshold: number | null
           mrp: number
           name: string
           price: number
@@ -42,6 +43,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_featured?: boolean | null
+          low_stock_threshold?: number | null
           mrp: number
           name: string
           price: number
@@ -60,6 +62,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_featured?: boolean | null
+          low_stock_threshold?: number | null
           mrp?: number
           name?: string
           price?: number
