@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import HeroBanner from '@/components/HeroBanner';
-import PromoCategoryCard from '@/components/PromoCategoryCard';
+import NoticeBox from '@/components/NoticeBox';
+import SpecialOfferBox from '@/components/SpecialOfferBox';
 import CategorySection from '@/components/CategorySection';
 import ProductSection from '@/components/ProductSection';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import Footer from '@/components/Footer';
+import MobileNavbar from '@/components/MobileNavbar';
 import {
   categories,
   dairyProducts,
@@ -54,30 +56,17 @@ const Index = () => {
     filteredBeverages.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-4">
         {/* Hero Banner */}
         <HeroBanner />
 
-        {/* Promo Category Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <PromoCategoryCard
-            title="Medical Supplies"
-            subtitle="Essential medical items for wellness"
-            variant="cyan"
-          />
-          <PromoCategoryCard
-            title="Grocery Essentials"
-            subtitle="Daily needs delivered fast"
-            variant="amber"
-          />
-          <PromoCategoryCard
-            title="Fresh Produce"
-            subtitle="Farm fresh vegetables & fruits"
-            variant="violet"
-          />
+        {/* Notice and Offer Boxes - Hidden on mobile */}
+        <section className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <NoticeBox />
+          <SpecialOfferBox />
         </section>
 
         {/* Category Section */}
@@ -149,6 +138,7 @@ const Index = () => {
       </main>
 
       <Footer />
+      <MobileNavbar />
     </div>
   );
 };
