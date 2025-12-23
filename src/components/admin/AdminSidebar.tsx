@@ -8,7 +8,8 @@ import {
   LogOut,
   FolderTree,
   Megaphone,
-  Flame
+  Flame,
+  Upload
 } from 'lucide-react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ import {
 const menuItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Products', url: '/admin/products', icon: Package },
+  { title: 'Bulk Import', url: '/admin/bulk-import', icon: Upload },
   { title: 'Categories', url: '/admin/categories', icon: FolderTree },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart, showBadge: true },
   { title: 'Users', url: '/admin/users', icon: Users },
