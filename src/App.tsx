@@ -16,6 +16,9 @@ import SearchResults from "./pages/SearchResults";
 import Category from "./pages/Category";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 // Admin imports
@@ -55,6 +58,9 @@ const App = () => (
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/category/:categoryId" element={<Category />} />
                 <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
                 
                 {/* Admin Routes - redirect /admin/login to /auth */}
                 <Route path="/admin/login" element={<Navigate to="/auth" replace />} />
