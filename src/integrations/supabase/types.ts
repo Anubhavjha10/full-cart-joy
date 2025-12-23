@@ -198,6 +198,35 @@ export type Database = {
         }
         Relationships: []
       }
+      notice_views: {
+        Row: {
+          id: string
+          notice_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          notice_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          notice_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_views_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notices: {
         Row: {
           content: string
@@ -604,6 +633,30 @@ export type Database = {
           id?: string
           is_active?: boolean
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          created_at: string
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          setting_key?: string
+          setting_value?: string
           updated_at?: string
         }
         Relationships: []

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, MapPin, AlertCircle, Check } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, MapPin, AlertCircle, Check, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,10 +14,12 @@ import {
 } from '@/components/ui/dialog';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { StoreClosedBanner } from '@/components/StoreClosedBanner';
 import { z } from 'zod';
 
 interface SavedAddress {
@@ -39,6 +41,7 @@ const phoneSchema = z.string().regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-di
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, clearCart, totalPrice, placeOrder } = useCart();
   const { user } = useAuth();
+  const { isOpen: storeIsOpen, message: storeClosedMessage } = useStoreStatus();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -145,6 +148,12 @@ const Cart = () => {
   const handlePlaceOrder = async () => {
     if (!user) {
       navigate('/auth');
+      return;
+    }
+
+    // Check if store is open
+    if (!storeIsOpen) {
+      toast.error('Store is currently closed. Please try again during store hours.');
       return;
     }
 
@@ -299,8 +308,19 @@ const Cart = () => {
 
               {user ? (
                 <div className="space-y-4">
+                  {/* Store closed warning */}
+                  {!storeIsOpen && (
+                    <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <Clock className="h-4 w-4 text-destructive mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-destructive">Store is closed</p>
+                        <p className="text-muted-foreground">{storeClosedMessage}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Profile completion warning */}
-                  {!profile?.phone && (
+                  {!profile?.phone && storeIsOpen && (
                     <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                       <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
                       <div className="text-sm">
@@ -386,10 +406,10 @@ const Cart = () => {
 
                   <Button
                     onClick={handlePlaceOrder}
-                    disabled={isPlacingOrder || !deliveryAddress.trim()}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6"
+                    disabled={isPlacingOrder || !deliveryAddress.trim() || !storeIsOpen}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 disabled:opacity-50"
                   >
-                    {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+                    {!storeIsOpen ? 'Store Closed' : isPlacingOrder ? 'Placing Order...' : 'Place Order'}
                   </Button>
                 </div>
               ) : (

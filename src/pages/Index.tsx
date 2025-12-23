@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import HeroBanner from '@/components/HeroBanner';
-import NoticeBox from '@/components/NoticeBox';
 import SpecialOfferBox from '@/components/SpecialOfferBox';
 import CategorySection from '@/components/CategorySection';
 import ProductSection from '@/components/ProductSection';
 import FeaturedCarousel from '@/components/FeaturedCarousel';
 import Footer from '@/components/Footer';
 import MobileNavbar from '@/components/MobileNavbar';
+import { FloatingNotice } from '@/components/FloatingNotice';
 import { useCategories } from '@/hooks/useCategories';
 import { useFeaturedProducts, useProductsByCategories } from '@/hooks/useProducts';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,9 +29,8 @@ const Index = () => {
         {/* Hero Banner */}
         <HeroBanner />
 
-        {/* Notice and Offer Boxes - Hidden on mobile */}
-        <section className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <NoticeBox />
+        {/* Special Offer Box - Hidden on mobile */}
+        <section className="hidden md:block mt-6">
           <SpecialOfferBox />
         </section>
 
@@ -108,6 +107,7 @@ const Index = () => {
 
       <Footer />
       <MobileNavbar />
+      <FloatingNotice />
     </div>
   );
 };
