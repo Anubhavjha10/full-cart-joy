@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Clock, X } from 'lucide-react';
-import { getAllProducts, ProductWithDetails } from '@/data/products';
+import { Search, Clock, X, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+
+interface ProductSuggestion {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  image_url: string | null;
+  category_name?: string;
+}
 
 const SEARCH_HISTORY_KEY = 'search_history';
 const MAX_HISTORY_ITEMS = 5;
@@ -45,11 +54,12 @@ const SearchAutocomplete = ({
   className,
   placeholder = 'Search "groceries"',
 }: SearchAutocompleteProps) => {
-  const [suggestions, setSuggestions] = useState<ProductWithDetails[]>([]);
+  const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showHistory, setShowHistory] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,19 +70,47 @@ const SearchAutocomplete = ({
 
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
-      const allProducts = getAllProducts();
-      const query = searchQuery.toLowerCase();
-      const filtered = allProducts
-        .filter(
-          (product) =>
-            product.name.toLowerCase().includes(query) ||
-            product.category.toLowerCase().includes(query) ||
-            product.brand.toLowerCase().includes(query)
-        )
-        .slice(0, 6);
-      setSuggestions(filtered);
-      setIsOpen(filtered.length > 0);
-      setShowHistory(false);
+      const fetchSuggestions = async () => {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('admin_products')
+            .select(`
+              id,
+              name,
+              slug,
+              price,
+              image_url,
+              category:categories(name)
+            `)
+            .eq('is_active', true)
+            .ilike('name', `%${searchQuery}%`)
+            .limit(6);
+
+          if (error) throw error;
+
+          const mapped = (data || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            price: p.price,
+            image_url: p.image_url,
+            category_name: p.category?.name,
+          }));
+
+          setSuggestions(mapped);
+          setIsOpen(mapped.length > 0);
+          setShowHistory(false);
+        } catch {
+          setSuggestions([]);
+          setIsOpen(false);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const debounce = setTimeout(fetchSuggestions, 300);
+      return () => clearTimeout(debounce);
     } else {
       setSuggestions([]);
       setIsOpen(false);
@@ -132,11 +170,11 @@ const SearchAutocomplete = ({
     }
   };
 
-  const handleSuggestionClick = (product: ProductWithDetails) => {
+  const handleSuggestionClick = (product: ProductSuggestion) => {
     setIsOpen(false);
     setShowHistory(false);
     saveSearchHistory(product.name);
-    navigate(`/product/${product.id}`);
+    navigate(`/product/${product.slug}`);
   };
 
   const handleHistoryClick = (query: string) => {
@@ -190,6 +228,9 @@ const SearchAutocomplete = ({
           className="flex h-10 w-full rounded-lg border border-border bg-background px-3 py-2 pl-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           autoComplete="off"
         />
+        {loading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
       </div>
 
       {/* Search History Dropdown */}
@@ -236,7 +277,7 @@ const SearchAutocomplete = ({
               )}
             >
               <img
-                src={product.image}
+                src={product.image_url || '/placeholder.svg'}
                 alt={product.name}
                 className="w-10 h-10 rounded-md object-cover flex-shrink-0"
               />
@@ -245,7 +286,7 @@ const SearchAutocomplete = ({
                   {highlightMatch(product.name, searchQuery)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {product.category} • ₹{product.price}
+                  {product.category_name} • ₹{product.price}
                 </p>
               </div>
             </button>

@@ -7,14 +7,17 @@ import {
   Coffee, 
   Croissant, 
   Wheat, 
-  Fish 
+  Fish,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Category {
+  id?: string;
   icon: string;
   label: string;
+  slug?: string;
 }
 
 interface CategorySectionProps {
@@ -27,46 +30,67 @@ const categoryConfig: Record<string, {
   gradient: string;
   hoverGradient: string;
 }> = {
-  'Dairy & Eggs': { 
+  'dairy': { 
     Icon: Milk, 
     gradient: 'from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30',
     hoverGradient: 'group-hover:from-blue-100 group-hover:to-blue-200 dark:group-hover:from-blue-900/50 dark:group-hover:to-blue-800/40'
   },
-  'Vegetables': { 
+  'vegetables': { 
     Icon: Carrot, 
     gradient: 'from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30',
     hoverGradient: 'group-hover:from-green-100 group-hover:to-green-200 dark:group-hover:from-green-900/50 dark:group-hover:to-green-800/40'
   },
-  'Fruits': { 
+  'fruits': { 
     Icon: Apple, 
     gradient: 'from-red-50 to-orange-100 dark:from-red-950/50 dark:to-orange-900/30',
     hoverGradient: 'group-hover:from-red-100 group-hover:to-orange-200 dark:group-hover:from-red-900/50 dark:group-hover:to-orange-800/40'
   },
-  'Snacks': { 
+  'snacks': { 
     Icon: Cookie, 
     gradient: 'from-amber-50 to-yellow-100 dark:from-amber-950/50 dark:to-yellow-900/30',
     hoverGradient: 'group-hover:from-amber-100 group-hover:to-yellow-200 dark:group-hover:from-amber-900/50 dark:group-hover:to-yellow-800/40'
   },
-  'Beverages': { 
+  'beverages': { 
     Icon: Coffee, 
     gradient: 'from-cyan-50 to-teal-100 dark:from-cyan-950/50 dark:to-teal-900/30',
     hoverGradient: 'group-hover:from-cyan-100 group-hover:to-teal-200 dark:group-hover:from-cyan-900/50 dark:group-hover:to-teal-800/40'
   },
-  'Bakery': { 
+  'bakery': { 
     Icon: Croissant, 
     gradient: 'from-orange-50 to-amber-100 dark:from-orange-950/50 dark:to-amber-900/30',
     hoverGradient: 'group-hover:from-orange-100 group-hover:to-amber-200 dark:group-hover:from-orange-900/50 dark:group-hover:to-amber-800/40'
   },
-  'Staples': { 
+  'staples': { 
     Icon: Wheat, 
     gradient: 'from-yellow-50 to-lime-100 dark:from-yellow-950/50 dark:to-lime-900/30',
     hoverGradient: 'group-hover:from-yellow-100 group-hover:to-lime-200 dark:group-hover:from-yellow-900/50 dark:group-hover:to-lime-800/40'
   },
-  'Meat & Fish': { 
+  'meat': { 
     Icon: Fish, 
     gradient: 'from-rose-50 to-pink-100 dark:from-rose-950/50 dark:to-pink-900/30',
     hoverGradient: 'group-hover:from-rose-100 group-hover:to-pink-200 dark:group-hover:from-rose-900/50 dark:group-hover:to-pink-800/40'
   },
+  'fish': { 
+    Icon: Fish, 
+    gradient: 'from-rose-50 to-pink-100 dark:from-rose-950/50 dark:to-pink-900/30',
+    hoverGradient: 'group-hover:from-rose-100 group-hover:to-pink-200 dark:group-hover:from-rose-900/50 dark:group-hover:to-pink-800/40'
+  },
+};
+
+const getConfigForCategory = (slug: string) => {
+  const normalizedSlug = slug.toLowerCase().replace(/[-\s]+/g, '');
+  
+  for (const [key, config] of Object.entries(categoryConfig)) {
+    if (normalizedSlug.includes(key)) {
+      return config;
+    }
+  }
+  
+  return { 
+    Icon: ShoppingBag, 
+    gradient: 'from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/30',
+    hoverGradient: 'group-hover:from-gray-100 group-hover:to-gray-200'
+  };
 };
 
 const CategorySkeleton = () => (
@@ -92,23 +116,23 @@ const CategorySection = ({ categories, isLoading = false }: CategorySectionProps
       {/* Category Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 md:gap-4">
         {isLoading ? (
-          // Skeleton loading state
           Array.from({ length: 8 }).map((_, index) => (
             <CategorySkeleton key={index} />
           ))
+        ) : categories.length === 0 ? (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+            No categories available. Add categories from the Admin Panel.
+          </div>
         ) : (
           categories.map((cat) => {
-            const config = categoryConfig[cat.label] || { 
-              Icon: Cookie, 
-              gradient: 'from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/30',
-              hoverGradient: 'group-hover:from-gray-100 group-hover:to-gray-200'
-            };
+            const slug = cat.slug || cat.label.toLowerCase().replace(/\s+/g, '-');
+            const config = getConfigForCategory(slug);
             const { Icon, gradient, hoverGradient } = config;
-            const href = `/category/${cat.label.toLowerCase().replace(/\s+/g, '-')}`;
+            const href = `/category/${slug}`;
 
             return (
               <Link
-                key={cat.label}
+                key={cat.id || cat.label}
                 to={href}
                 className="group"
               >

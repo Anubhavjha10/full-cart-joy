@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Filter, SortAsc, X, ChevronDown } from 'lucide-react';
+import { Filter, SortAsc, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -18,23 +18,14 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { getAllProducts, categories } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
 
 type SortOption = 'relevance' | 'price-low' | 'price-high' | 'name-asc' | 'name-desc';
-
-const categoryMap: Record<string, string> = {
-  'Dairy & Eggs': 'dairy',
-  'Vegetables': 'vegetables',
-  'Fruits': 'vegetables',
-  'Snacks': 'snacks',
-  'Beverages': 'beverages',
-  'Bakery': 'breakfast',
-  'Staples': 'breakfast',
-  'Meat & Fish': 'snacks',
-};
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,10 +35,11 @@ const SearchResults = () => {
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const allProducts = getAllProducts();
+  const { products: allProducts, loading: productsLoading } = useProducts();
+  const { categories, loading: categoriesLoading } = useCategories();
 
   const filteredProducts = useMemo(() => {
-    let products = allProducts;
+    let products = [...allProducts];
 
     // Filter by search query
     if (query) {
@@ -55,34 +47,33 @@ const SearchResults = () => {
       products = products.filter(
         (p) =>
           p.name.toLowerCase().includes(lowerQuery) ||
-          p.category.toLowerCase().includes(lowerQuery) ||
-          p.brand.toLowerCase().includes(lowerQuery) ||
-          p.description.toLowerCase().includes(lowerQuery)
+          (p.category?.name?.toLowerCase().includes(lowerQuery)) ||
+          (p.description?.toLowerCase().includes(lowerQuery))
       );
     }
 
     // Filter by selected categories
     if (selectedCategories.length > 0) {
-      const categoryValues = selectedCategories.map((cat) => categoryMap[cat] || cat.toLowerCase());
-      products = products.filter((p) => categoryValues.includes(p.category));
+      products = products.filter((p) => 
+        p.category && selectedCategories.includes(p.category.name)
+      );
     }
 
     // Sort products
     switch (sortBy) {
       case 'price-low':
-        products = [...products].sort((a, b) => a.price - b.price);
+        products.sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        products = [...products].sort((a, b) => b.price - a.price);
+        products.sort((a, b) => b.price - a.price);
         break;
       case 'name-asc':
-        products = [...products].sort((a, b) => a.name.localeCompare(b.name));
+        products.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'name-desc':
-        products = [...products].sort((a, b) => b.name.localeCompare(a.name));
+        products.sort((a, b) => b.name.localeCompare(a.name));
         break;
       default:
-        // relevance - keep original order
         break;
     }
 
@@ -117,21 +108,29 @@ const SearchResults = () => {
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold text-foreground mb-3">Categories</h3>
-        <div className="space-y-2">
-          {categories.map((cat) => (
-            <label
-              key={cat.label}
-              className="flex items-center gap-3 cursor-pointer hover:bg-accent/50 p-2 rounded-lg transition-colors"
-            >
-              <Checkbox
-                checked={selectedCategories.includes(cat.label)}
-                onCheckedChange={() => handleCategoryToggle(cat.label)}
-              />
-              <span className="text-lg">{cat.icon}</span>
-              <span className="text-sm text-foreground">{cat.label}</span>
-            </label>
-          ))}
-        </div>
+        {categoriesLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {categories.map((cat) => (
+              <label
+                key={cat.id}
+                className="flex items-center gap-3 cursor-pointer hover:bg-accent/50 p-2 rounded-lg transition-colors"
+              >
+                <Checkbox
+                  checked={selectedCategories.includes(cat.name)}
+                  onCheckedChange={() => handleCategoryToggle(cat.name)}
+                />
+                <span className="text-lg">{cat.icon}</span>
+                <span className="text-sm text-foreground">{cat.name}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       {hasActiveFilters && (
@@ -243,10 +242,27 @@ const SearchResults = () => {
             </div>
 
             {/* Products Grid */}
-            {filteredProducts.length > 0 ? (
+            {productsLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <Skeleton key={i} className="h-64 rounded-xl" />
+                ))}
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard 
+                    key={product.id} 
+                    product={{
+                      id: product.id,
+                      name: product.name,
+                      quantity: product.unit,
+                      price: product.price,
+                      image: product.image_url || '/placeholder.svg',
+                      category: product.category?.slug || '',
+                      rating: 4.5,
+                    }} 
+                  />
                 ))}
               </div>
             ) : (
