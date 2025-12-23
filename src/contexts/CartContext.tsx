@@ -165,13 +165,67 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const placeOrder = useCallback(async (deliveryAddress: string): Promise<boolean> => {
     if (!user || items.length === 0) return false;
 
+    const orderTotal = items.reduce((sum, item) => sum + item.price * item.count, 0);
+
     try {
+      // Validate store hours on backend before placing order
+      const { data: storeSettings, error: settingsError } = await supabase
+        .from('store_settings')
+        .select('setting_key, setting_value');
+
+      if (settingsError) throw settingsError;
+
+      const settingsMap: Record<string, string> = {};
+      storeSettings?.forEach((item: { setting_key: string; setting_value: string }) => {
+        settingsMap[item.setting_key] = item.setting_value;
+      });
+
+      const forceStatus = settingsMap.store_force_status || 'auto';
+      
+      if (forceStatus === 'closed') {
+        toast({
+          title: 'Store is closed',
+          description: settingsMap.store_closed_message || 'Store is currently closed.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      if (forceStatus === 'auto') {
+        const openTime = settingsMap.store_open_time || '09:00';
+        const closeTime = settingsMap.store_close_time || '21:00';
+        
+        const now = new Date();
+        const [openHour, openMin] = openTime.split(':').map(Number);
+        const [closeHour, closeMin] = closeTime.split(':').map(Number);
+        
+        const openMinutes = openHour * 60 + openMin;
+        const closeMinutes = closeHour * 60 + closeMin;
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        
+        let isOpen: boolean;
+        if (closeMinutes < openMinutes) {
+          isOpen = currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+        } else {
+          isOpen = currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+        }
+        
+        if (!isOpen) {
+          toast({
+            title: 'Store is closed',
+            description: settingsMap.store_closed_message || 'Store is currently closed.',
+            variant: 'destructive',
+          });
+          return false;
+        }
+      }
+
       // Create order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          total_amount: totalPrice,
+          total_amount: orderTotal,
           status: 'pending',
           delivery_address: deliveryAddress,
         })
